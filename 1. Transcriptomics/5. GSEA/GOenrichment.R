@@ -19,15 +19,16 @@ firstup <- function(x) {
   x
 }
 
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
 
 # Load data
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/DEresults_RTTvsIC_gx.RData")
-genes_all <- rownames(topList[[1]])
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
 
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/SampleInfo.RData")
+genes_all <- rownames(topList[[1]])
 
 # Get p-values
 pvalues <- matrix(unlist(lapply(topList, function(x){x[genes_all,"PValue"]})), ncol = length(topList))
@@ -116,8 +117,8 @@ GOresults_adj <- apply(GOresults[,2:8],2,function(x){p.adjust(x, method = "fdr")
 rownames(GOresults_adj) <- GOresults$Name
 
 # Load GO annotation data
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
 
 # Get GO terms
 rownames(GOannotation) <- GOannotation$Name
@@ -140,12 +141,14 @@ reducedTerms <- reduceSimMatrix(simMatrix,
                                 threshold=0.8,
                                 orgdb="org.Hs.eg.db")
 
-save(reducedTerms, file = "Data/reducedTerms_RTTvsIC_BP1.RData")
-
-load("Data/reducedTerms_RTTvsIC_BP1.RData")
-
 # Remove GO:0045229, because it includes the same genes as GO:0030198
 #reducedTerms <- reducedTerms[reducedTerms$parent != "GO:0045229",]
+
+# Save reduced terms
+save(reducedTerms, file = "Data/reducedTerms_RTTvsIC_BP1.RData")
+
+# Load data
+load("Data/reducedTerms_RTTvsIC_BP1.RData")
 
 # Reduce number of GO terms based on previous selection
 GOannotation_fil <- GOannotation[GOannotation$ID %in% unique(reducedTerms$parent),]
@@ -153,10 +156,8 @@ GOresults_fil <- GOresults[GOresults$Name %in% GOannotation_fil$Name,]
 GOresults_NES_fil <- GOresults_NES[GOresults_NES$Name %in% GOannotation_fil$Name,]
 GOresults_adj_fil <- GOresults_adj[rownames(GOresults_adj) %in% GOannotation_fil$Name,]
 
-
-# Get terms that are significant (FDR < 0.05) in at least 1 time point
+# Get terms that are significant (FDR < 0.05) in at least 4 time point
 sigterms <- rownames(GOresults_adj_fil)[rowSums(GOresults_adj_fil < 0.05) > 3]
-
 
 # Clustering
 values <- -log10(GOresults[,2:8]) * sign(GOresults_NES[,2:8])
@@ -272,7 +273,6 @@ finalPlot <- ggarrange(colSideColorPlot_tissue,
 # Save plot
 ggsave(finalPlot, file = "Plots/GOEnrichment_RTTvsIC1.png", width = 8, height = 8)
 
-
 # Get legends:
 legendPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
@@ -300,7 +300,7 @@ ggsave(legend, file = "Plots/legend_GOEnrichment1.png", width = 8, height = 8)
 
 ###############################################################################
 
-# Plot results
+# Plot Individual GO term
 
 ###############################################################################
 
@@ -330,8 +330,8 @@ plotExpr <- plotExpr %>%
   mutate(stExpr = (meanExpr - mean(meanExpr))/sd(meanExpr))
 
 # Load GO annotation data
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
 
 # Select GO term
 termID <- "GO:0097192"
@@ -430,90 +430,29 @@ ggsave(finalPlot, file = paste0("Plots/",termName,"_expr.png"), width = 10, heig
 
 
 
-# Main plot: expression over time
-mainPlot <- ggplot(plotDF) +
-  geom_point(aes(x = TimeRegion, y = stExpr, color = Group), size = 2, shape = "-") +
-  geom_line(aes(x = TimeRegion, y = stExpr, color = Group, 
-                group = paste0(Group, GeneID)), alpha = 0.8) +
-  ggtitle(termName) +
-  ylab(expression("Standardized"~log[2]~"intensity")) +
-  xlab(NULL) +
-  theme_bw() +
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5,
-                                  face = "bold",
-                                  size = 16)) +
-  scale_color_manual(values = c("#377EB8","#E41A1C"))
+###############################################################################
 
-# Column side color: time and tissue/region
-colSideColor<- unique(data.frame(
-  sample = plotDF$TimeRegion,
-  time = plotDF$Time,
-  region = plotDF$Tissue))
+# Plot overlap of GO terms
 
-# Time
-colSideColorPlot_time <- ggplot(data = colSideColor) +
-  geom_tile(aes(x = sample, y = "label", fill = time)) +
-  geom_text(data = colSideColor,
-            aes(x = sample, y = "label", label = time)) +
-  theme_void() +
-  theme(axis.text.x = element_blank(),#element_text(angle = 90),
-        legend.position = "none",
-        axis.text.y = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  scale_fill_brewer(palette = "Reds")
-
-# Tissue/region
-colSideColorPlot_tissue <- ggplot(data = colSideColor) +
-  geom_tile(aes(x = sample, y = "label", fill = region)) +
-  geom_text(data = colSideColor[(str_detect(colSideColor$sample, "D40") |
-                                   str_detect(colSideColor$sample, "D0")),],
-            aes(x = sample, y = "label", label = region)) +
-  theme_void() +
-  theme(axis.text.x = element_blank(),
-        legend.position = "none",
-        axis.text.y = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  scale_fill_brewer(palette = "Dark2")
+###############################################################################
 
 
-# Combine plots into a single figure
-finalPlot <- ggarrange(mainPlot,
-                       colSideColorPlot_time,
-                       colSideColorPlot_tissue,
-                       heights = c(6,0.5,0.5),nrow = 3,ncol = 1,
-                       common.legend = TRUE,
-                       legend = "right",
-                       align = "v")
-# Print plot
-finalPlot
-ggsave(finalPlot, file = "DNAstrandElongation2.png", width = 10, height = 8)
+# Load data
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
 
-
-
-
-
-# Load GO annotation data
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment/Data/terms_ordered.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/DEresults_RTTvsIC_gx.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/SampleInfo.RData")
-
-
+# Get selected GO terms
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
 TERM2GENE <- data.frame(TERM = unlist(lapply(seq_along(GOgenes_fil), function(x){rep(names(GOgenes_fil)[x],length(GOgenes_fil[[x]]))})),
                         GENE = unlist(GOgenes_fil))
 
+# Prepare data
 finalDF <- inner_join(TERM2GENE, geneAnnotation, by = c("GENE" = "EnsemblID"))
-#finalDF <- finalDF[finalDF$gene_id %in% rownames(gxMatrix_norm),]
-
 finalDF <- inner_join(finalDF, GOannotation, by = c("TERM" = "ID"))
 finalDF$Name <- factor(firstup(finalDF$Name), levels = firstup(terms_ordered))
 
@@ -527,9 +466,9 @@ for (i in 1:nrow(finalDF)){
 
 model <- hclust(dist(t(values)), "ward.D2")
 genes_ordered <- model$labels[model$order]
-
 finalDF$GENE <- factor(finalDF$GENE, levels = genes_ordered)
 
+# Make plot
 p <- ggplot(finalDF) +
   geom_tile(aes(x = GENE, y = Name)) +
   ylab(NULL) +
@@ -537,4 +476,5 @@ p <- ggplot(finalDF) +
   theme_bw() +
   theme(axis.text.x = element_blank())
 
+# Save plot
 ggsave(p, file = paste0("Plots/common_genes.png"), width = 12, height = 8)

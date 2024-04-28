@@ -19,13 +19,14 @@ firstup <- function(x) {
   x
 }
 
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/4. DEAnalysis")
 
 # Load data
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/DEresults_RTTvsIC_gx.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/SampleInfo.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
 
 genes_all <- rownames(topList[[1]])
 
@@ -45,19 +46,19 @@ logFCs <- matrix(unlist(lapply(topList, function(x){x[genes_all,"logFC"]})), nco
 rownames(logFCs) <- genes_all
 colnames(logFCs) <- names(topList)
 
-# markers <- c("ENSG00000176697_BDNF",
-#              "ENSG00000105880_DLX5",
-#              "ENSG00000167244_IGF2")
-
+# Set colors
 color_time <- c("#FEE5D9","#FCAE91","#FB6A4A","#CB181D","#FCAE91","#FB6A4A","#CB181D")
 
+# Make volcano plot for each of the seven comparisons
 for (i in 1:ncol(pvalues)){
+  
+  # Prepare data for plotting
   plotDF <- data.frame(Pvalue = pvalues[,i],
                        adjPvalue = adj_pvalues[,i],
                        logFC = logFCs[,i],
                        GeneID = rownames(pvalues))
   
-  
+  # make plot
   p <- ggplot() +
     geom_point(data = plotDF, 
                aes(x = logFC, y = -log10(Pvalue)),
@@ -65,15 +66,11 @@ for (i in 1:ncol(pvalues)){
     geom_point(data = plotDF[(plotDF$adjPvalue < 0.05) & (abs(plotDF$logFC) > 1),], 
                aes(x = logFC, y = -log10(Pvalue)),
                color = color_time[i]) +
-    # geom_point(data = plotDF[plotDF$GeneID %in% markers,], 
-    #            aes(x = logFC, y = -log10(Pvalue), shape = str_remove(GeneID, ".*_")),
-    #            fill = "black", color = "white", size = 2) +
     xlab(expression(log[2]~"FC")) +
     ylab(expression(-log[10]~"P value")) +
     labs(shape = NULL) +
     xlim(c(-17,17)) +
     ylim(c(0,50)) +
-    #scale_color_brewer(palette = "Set1") +
     scale_shape_manual(values = c(21,22,24)) +
     theme_void() +
     theme(axis.line.x = element_line(),
@@ -91,9 +88,9 @@ for (i in 1:ncol(pvalues)){
           plot.margin = margin(1,1,1,1, "cm"),
           legend.position = "bottom")
   
-  
+  # Save plot
   ggsave(p, 
-         file = paste0("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/VolcanoPlots/",
+         file = paste0("Plots/",
                        colnames(pvalues)[i],
                        "_volcano.png"),
          width = 6, height = 4.5)

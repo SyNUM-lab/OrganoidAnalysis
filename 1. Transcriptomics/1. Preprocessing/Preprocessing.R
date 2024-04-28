@@ -1,7 +1,3 @@
-#*****************************************************************************#
-# Normalization
-#*****************************************************************************#
-
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
@@ -13,12 +9,16 @@ library(edgeR)
 library(patchwork)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/Preprocessing")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing")
+
+#*****************************************************************************#
+# Normalization
+#*****************************************************************************#
 
 # Load data
-load("gxMatrix_raw1.RData")
-load("geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
+load("gxMatrix_raw1.RData")                                           # Raw count data
+load("geneAnnotation.RData")                                          # Gene annotation data
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")  # SampleInfo
 all(sampleInfo$SampleID == colnames(gxMatrix_raw))
 
 # Remove sex chromosomal genes
@@ -82,6 +82,8 @@ for (i in 1:7){
 }
 
 names(topList) <- colnames(all_contrasts)
+
+# Save differential expression analysis results
 save(topList, file = "DEresults_RTTvsIC_gx.RData")
 
 
@@ -132,6 +134,8 @@ for (i in 1:12){
 }
 
 names(topList) <- colnames(all_contrasts)
+
+# Save differential expression analysis results
 save(topList, file = "DEresults_Time_gx.RData")
 
 
@@ -139,9 +143,11 @@ save(topList, file = "DEresults_Time_gx.RData")
 #*****************************************************************************#
 # PCA
 #*****************************************************************************#
+
+# Load data
 load("gxMatrix_norm.RData")
 load("geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
 
 # Run PCA
 pca <- prcomp(t(gxMatrix_norm), 
@@ -184,7 +190,8 @@ p <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
                                        size = 0.05,
                                        linetype = 1))
 
-ggsave(filename = "PCA_Scores_gx.png", p, width = 7, height = 5)
+# Save PCA plot
+ggsave(filename = "QCplots/PCA_Scores_gx.png", p, width = 7, height = 5)
 
 
 #*****************************************************************************#
@@ -200,6 +207,7 @@ exprPlot$Colour <- paste0(exprPlot$Group, ": ", exprPlot$Time)
 exprPlot$Tissue[exprPlot$Tissue == "Cell"] <- "iPSC"
 exprPlot$Tissue <- factor(exprPlot$Tissue, levels = c("Dorsal","iPSC",  "Ventral"))
 
+# Order the samples
 order <- arrange(exprPlot, by = Time)
 orderSamples <- unique(order$key)
 exprPlot$key <- factor(exprPlot$key,
@@ -275,7 +283,7 @@ finalPlot <- p + colSideColorPlot_time + colSideColorPlot_tissue +
   plot_layout(nrow = 3, ncol = 1, heights = c(8.6,0.7,0.7))
 
 # Save plot
-ggsave(finalPlot, file = "Boxplots_gx.png", width = 8.5, height = 6)
+ggsave(finalPlot, file = "QCplots/Boxplots_gx.png", width = 8.5, height = 6)
 
 # Get legends:
 legendPlot <- ggplot(exprPlot, aes(x = key, y = value, fill = Colour)) +
@@ -302,5 +310,5 @@ legendPlot <- ggplot(exprPlot, aes(x = key, y = value, fill = Colour)) +
 legend <- cowplot::get_legend(legendPlot)
 
 # Save legend
-ggsave(legend, file = "Boxplots_gx_legend.png", width = 8, height = 8)
+ggsave(legend, file = "QCplots/Boxplots_gx_legend.png", width = 8, height = 8)
 

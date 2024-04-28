@@ -6,9 +6,10 @@
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
+gc()
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/TimeAnalysis")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/3. TimeAnalysis")
 
 # Load packages
 library(tidyverse)
@@ -19,10 +20,17 @@ library(ggrepel)
 library(rrvgo)
 library(BaseSet)
 
+# FUNCTION: Capitalize first letter
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
 # Load data:
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
 all(sampleInfo$SampleID == colnames(gxMatrix_norm))
 
 #*****************************************************************************#
@@ -62,7 +70,6 @@ p <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
   geom_point(size = 3) +
   xlab(paste0("PC1 (", expl_var[1]*100,"%)")) +
   ylab(paste0("PC2 (", expl_var[2]*100,"%)")) +
-  ggtitle("Gene Expression Data") +
   scale_color_manual(values = colors) +
   theme_classic() +
   theme(plot.title = element_text(hjust = 0.5,
@@ -76,6 +83,7 @@ p <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
                                        linetype = 1)) +
   guides(color = guide_legend("Time"), shape = guide_legend("Region"))
 
+# Save plot
 ggsave(filename = "Plots/PCA_Scores_gx.png", p, width = 7, height = 5)
 
 
@@ -108,20 +116,16 @@ BPresults <- gseGO(
   minGSSize = 10,
   maxGSSize = 500)
 
-save(BPresults, file = "Data/BP_GSEA1.RData")
+# Save results from GSEA analysis
+save(BPresults, file = "BP_GSEA1.RData")
 
 
 #*****************************************************************************#
 #   Make plots
 #*****************************************************************************#
-# Capitalize first letter
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
 
 # Load data
-load("Data/BP_GSEA1.RData")
+load("BP_GSEA1.RData")
 
 # Get BP results
 BP <- BPresults@result
@@ -139,9 +143,9 @@ reducedTerms <- reduceSimMatrix(simMatrix,
                                 threshold=0.85,
                                 orgdb="org.Hs.eg.db")
 
-save(reducedTerms, file = "Data/reducedTerms_PC1_BP1.RData")
+save(reducedTerms, file = "reducedTerms_PC1_BP1.RData")
 
-load("Data/reducedTerms_PC1_BP1.RData")
+load("reducedTerms_PC1_BP1.RData")
 
 # Reduce number of GO terms
 BP_fil <- BP[unique(reducedTerms$parent),]
@@ -179,8 +183,7 @@ selectedTerms$Description <- factor(selectedTerms$Description,
                                                "Regulation of neurotransmitter receptor activity"
                                               ))
 
-colors <- c("#9ECAE1","#6BAED6","#4292C6","#2171B5","#084594",
-            "#FC9272","#FB6A4A","#EF3B2C","#CB181D","#99000D")
+# Set colors of arrows
 colors <- c("#BCBDDC","#9E9AC8","#807DBA","#6A51A3","#4A1486",
             "#FDAE6B","#FD8D3C","#F16913","#D94801","#8C2D04")
 names(colors) <- c("Mitochondrial gene expression",
@@ -195,8 +198,10 @@ names(colors) <- c("Mitochondrial gene expression",
                    "Regulation of neurotransmitter receptor activity"
 )
 
+# Set colors of PCA scores
 fills <- c("#F0F0F0","#D9D9D9","#BDBDBD","#969696")
 
+# Make plot
 p <- ggplot() +
   geom_point(data = plotPCA, 
              aes(x = PC1, y = PC2, fill = Time), 
@@ -208,7 +213,6 @@ p <- ggplot() +
   scale_fill_manual(values = fills) +
   xlab(paste0("PC1 (", expl_var[1]*100,"%)")) +
   ylab(paste0("PC2 (", expl_var[2]*100,"%)")) +
-  ggtitle("Transcriptomics") +
   labs(fill = "Time", color = "GO term") +
   theme_classic() +
   theme(plot.title = element_text(hjust = 0.5,
@@ -222,8 +226,8 @@ p <- ggplot() +
                                        linetype = 1),
         axis.text = element_blank(),
         axis.ticks = element_blank())
-  #theme(legend.title = element_text(face = "bold"))
 
-ggsave(p, file = "Plots/TimeAnalysis_loadings_alt1.png", width = 9, height = 5)
+# Save plot
+ggsave(p, file = "TimeAnalysis_PCA.png", width = 9, height = 5)
 
 

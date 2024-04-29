@@ -9,7 +9,7 @@ library(GENIE3)
 library(tidyverse)
 library(circlize)
 
-# Capitalize first letter
+# FUNCTION: Capitalize first letter
 firstup <- function(x) {
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
   x
@@ -42,13 +42,16 @@ pxMatrix_fil <- pxMatrix_imp[rownames(pxMatrix_imp) %in% proteinAnnotation$ID[pr
 #..............................................................................#
 
 # Load lncRNA expression data
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/lncRNAs/lnc_annotations.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load(paste0(preprocessing_dir,"Gene_biotype.RData"))
+
+# Filter for lncRNA genes only
 gxMatrix_lncRNA <- gxMatrix_norm[str_remove(rownames(gxMatrix_norm), "_.*") %in% annotations$ensembl_gene_id[annotations$gene_biotype == "lncRNA"],]
 
-# Load lncRNA interaction data
-lncRNAint <- read.delim("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/lncRNAs/lncRNA_interaction.txt", header = FALSE)
+# Load lncRNA interaction data: Retrieved from NPInter V5
+lncRNAint <- read.delim("Data/lncRNA_interaction.txt", header = FALSE)
 
 # Select lncRNA-protein interactions
 lncRNAint_fil <- lncRNAint[(lncRNAint$V7 == "protein") &
@@ -71,7 +74,7 @@ lncRNAint_fil <- lncRNAint[(lncRNAint$V11 == "Homo sapiens") &
 # Select lncRNAs that interact with TFs only
 lncRNA_DNA <- unique(lncRNAint_fil$V2)
 
-
+# get expression of these lncRNA regulators only
 gxMatrix_lncRNA <- gxMatrix_lncRNA[rownames(gxMatrix_lncRNA) %in% 
                                      geneAnnotation$gene_id[geneAnnotation$GeneName 
                                                             %in% unique(c(lncRNA_DNA,lncRNA_TF))],]
@@ -83,7 +86,7 @@ gxMatrix_lncRNA <- gxMatrix_lncRNA[rownames(gxMatrix_lncRNA) %in%
 #..............................................................................#
 
 # Eigengenes of GO terms
-load(paste0("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/eigengenes_all.RData"))
+load(paste0("Data/eigengenes_all.RData"))
 exprMatrix <- rbind(pxMatrix_fil,gxMatrix_lncRNA)
 exprMatrix <- rbind(exprMatrix,eigengenes)
 

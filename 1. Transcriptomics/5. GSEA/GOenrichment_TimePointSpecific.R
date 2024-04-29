@@ -19,15 +19,24 @@ firstup <- function(x) {
   x
 }
 
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment")
+# Set working directory
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
 
-# Load data
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/DEresults_RTTvsIC_gx.RData")
+# Load necessary data
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+
+load("Data/terms_ordered1.RData")
+load("Data/GOresults_GSEA_gx1.RData")
+load("Data/GOresults_NES_GSEA_gx1.RData")
+load("Data/reducedTerms_RTTvsIC_BP1.RData")
+
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
 genes_all <- rownames(topList[[1]])
-
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/SampleInfo.RData")
 
 # Get p-values
 pvalues <- matrix(unlist(lapply(topList, function(x){x[genes_all,"PValue"]})), ncol = length(topList))
@@ -44,25 +53,13 @@ logFCs <- matrix(unlist(lapply(topList, function(x){x[genes_all,"logFC"]})), nco
 rownames(logFCs) <- unlist(lapply(str_split(genes_all, "_"), function(x){x[1]}))
 colnames(logFCs) <- names(topList)
 
-
-
-# Load GSEA results
-load("Data/GOresults_GSEA_gx1.RData")
-load("Data/GOresults_NES_GSEA_gx1.RData")
-
 # Get adjusted p-values
 GOresults_adj <- apply(GOresults[,2:8],2,function(x){p.adjust(x, method = "fdr")})
 rownames(GOresults_adj) <- GOresults$Name
 
-# Load GO annotation data
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-load("Data/reducedTerms_RTTvsIC_BP1.RData")
-
 # Get GO terms
 rownames(GOannotation) <- GOannotation$Name
 GOterms_all <- GOannotation[GOresults$Name, "ID"]
-
 
 # Reduce number of GO terms based on previous selection
 GOannotation_fil <- GOannotation[GOannotation$ID %in% unique(reducedTerms$parent),]
@@ -75,76 +72,53 @@ values <- -log10(GOresults[,2:8]) * sign(GOresults_NES[,2:8])
 rownames(values) <- GOresults$Name
 
 
+# Get time- and region-specific markers
 GOresults_NES_fil <- GOresults_NES_fil[,-1]
 GOresults_fil <- GOresults_fil[,-1]
-
 sigMatrix_pos <- matrix((GOresults_NES_fil > 0) & (GOresults_adj_fil < 0.05), ncol = ncol(GOresults_NES_fil))
 sigMatrix_neg <- matrix((GOresults_NES_fil < 0) & (GOresults_adj_fil < 0.05), ncol = ncol(GOresults_NES_fil))
-sigMatrix_all1 <- matrix((GOresults_fil < 0.1), ncol = ncol(GOresults_fil))
 sigMatrix_all <- matrix((GOresults_adj_fil < 0.05), ncol = ncol(GOresults_adj_fil))
 
-
+# Early-time markers
 early <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(1,2,5)]) == 3) &
                                   (rowSums(sigMatrix_all[,c(3,4,6,7)]) ==0)],
            rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(1,2,5)]) == 3) &
                                   (rowSums(sigMatrix_all[,c(3,4,6,7)]) ==0)]
 )
 
+# Mid-time markers
 mid <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(2,3,5,6)]) >= 3) &
                                 (rowSums(sigMatrix_all[,c(1,4,7)]) ==0)],
          rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(2,3,5,6)]) >= 3) &
                                 (rowSums(sigMatrix_all[,c(1,4,7)]) ==0)]
 )
 
+# Late-time markers
 late <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(3,4,6,7)]) >= 3) &
                                  (rowSums(sigMatrix_all[,c(1,2,5)]) ==0)],
           rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(3,4,6,7)]) >= 3) &
                                  (rowSums(sigMatrix_all[,c(1,2,5)]) ==0)]
 )
 
+# Vental-region markers
 ventral <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(1,5,6,7)]) >= 3) &
                                     (rowSums(sigMatrix_all[,c(2,3,4)]) == 0)],
              rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(1,5,6,7)]) >= 3) &
                                     (rowSums(sigMatrix_all[,c(2,3,4)]) == 0)]
 )
 
+# Dorsal-region markers
 dorsal <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(1,2,3,4)]) >= 3) &
                                    (rowSums(sigMatrix_all[,c(5,6,7)]) ==0)],
             rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(1,2,3,4)]) >= 3) &
                                    (rowSums(sigMatrix_all[,c(5,6,7)]) ==0)]
 )
 
-D0 <- c(rownames(GOresults_adj_fil)[(sigMatrix_pos[,1]) &
-                                       (rowSums(sigMatrix_all1[,c(2,3,4,5,6,7)]) ==0)],
-         rownames(GOresults_adj_fil)[(sigMatrix_neg[,1]) &
-                                       (rowSums(sigMatrix_all1[,c(2,3,4,5,6,7)]) ==0)]
-)
 
-D13 <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(2,5)]) >= 1) &
-                                          (rowSums(sigMatrix_all1[,c(1,3,4,6,7)]) ==0)],
-            rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(2,5)]) >= 1) &
-                                          (rowSums(sigMatrix_all1[,c(1,3,4,6,7)]) ==0)]
-)
-
-D40 <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(3,6)]) >= 1) &
-                                       (rowSums(sigMatrix_all1[,c(1,2,4,5,7)]) ==0)],
-         rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(3,6)]) >= 1) &
-                                       (rowSums(sigMatrix_all1[,c(1,2,4,5,7)]) ==0)]
-)
-
-D75 <- c(rownames(GOresults_adj_fil)[(rowSums(sigMatrix_pos[,c(4,7)]) >= 1) &
-                                       (rowSums(sigMatrix_all1[,c(1,2,3,5,6)]) ==0)],
-         rownames(GOresults_adj_fil)[(rowSums(sigMatrix_neg[,c(4,7)]) >= 1) &
-                                       (rowSums(sigMatrix_all1[,c(1,2,3,5,6)]) ==0)]
-)
-
-
-
-
+# Collect all selected GO terms
 selTerms <- rev(c(dorsal, ventral, early, mid, late))
 values_fil <- values[selTerms,]
 GOresults_adj_fil <- GOresults_adj[selTerms,]
-
 
 # Prepare data for plotting
 plotData <- gather(values_fil)
@@ -270,10 +244,6 @@ legendPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value
 
 legend <- cowplot::get_legend(legendPlot)
 
+# Save legend
 ggsave(legend, file = "Plots/legend_GOEnrichment_TimePointSpecific.png", width = 8, height = 8)
 
-
-# positive regulation of cytokine production (GO:0001819) - late
-# cell-substrate adhesion (GO:0031589) - ventral
-# extrinsic apoptotic signaling pathway in absence of ligand (GO:0097192) - D13
-# myoblast fusion (GO:0007520) - D75

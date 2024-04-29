@@ -11,8 +11,8 @@ library(DEP)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Proteins/Preprocessing")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
 
 # Read proteomics data
 pxData_raw <- read.delim("D:/RTTproject/OriginalData/Proteomics/DEP analysis/Result files/20210310_Cell__total_scaling_raw.txt",
@@ -86,11 +86,13 @@ colnames(pxData_raw) <- samples1
 pxData_raw <- pxData_raw[,sampleInfo$SampleID]
 all(sampleInfo$SampleID == colnames(pxData_raw))
 
-# Exlude X and Y chromosomal proteins
+# Exlude X and Y chromosomal proteins:
+
+# Select biomaRt dataset
 ensembl=useMart("ensembl")
 ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
 
-#biomaRt::listAttributes(ensembl)
+# Get chromosome annotations for each protein
 annotations <- getBM(attributes=c("uniprot_gn_id",
                                   "hgnc_symbol",
                                   "chromosome_name"), 
@@ -98,6 +100,7 @@ annotations <- getBM(attributes=c("uniprot_gn_id",
                      values = str_remove(rownames(pxData_raw), "-.*"),
                      mart = ensembl)
 
+# Get X/Y chromosomal proteins
 XYproteins <- annotations$uniprot_gn_id[(annotations$chromosome_name == "X")|
                                           (annotations$chromosome_name == "Y")]
 XYproteins1 <- NULL
@@ -106,7 +109,7 @@ for (i in 1:length(XYproteins)){
                   rownames(pxData_raw)[str_detect(rownames(pxData_raw),XYproteins[i])])
 }
 
-
+# Remove X/Y chromosomal proteins from the raw data
 pxData_raw <- pxData_raw[!(rownames(pxData_raw) %in% XYproteins1),]
 
 #*****************************************************************************#
@@ -163,13 +166,15 @@ pxData_imp <- DEP::impute(
 
 plot_imputation(pxData_norm, pxData_imp)
 
-save(pxData_imp, file = "Proteins/pxData_imp.RData")
+# Save imputed data
+save(pxData_imp, file = "pxData_imp.RData")
 
 #*****************************************************************************#
 #   DE Analysis
 #*****************************************************************************#
 
-load("Proteins/pxData_imp.RData")
+# Load expression data
+load("pxData_imp.RData")
 
 # Differential enrichment analysis  based on linear models and empherical Bayes statistics
 comparisons <- c("RTT_Cell_D0_vs_IC_Cell_D0",
@@ -187,16 +192,18 @@ data_diff <- test_diff(pxData_imp, type = "manual",test = comparisons)
 dep <- add_rejections(data_diff, alpha = 0.05, lfc = log2(2))
 
 DEresults_px <- get_results(dep)
-save(DEresults_px, file = "Proteins/DEresults_px.RData")
 
-
+# Save DE results
+save(DEresults_px, file = "DEresults_px.RData")
 
 #*****************************************************************************#
 # PCA
 #*****************************************************************************#
-load("pxData_imp.RData")
 
+# Load expression data
+load("pxData_imp.RData")
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
+
 # Run PCA
 pca <- prcomp(t(pxMatrix_imp), 
               retx = TRUE, # Give rotated variables (PCA loadings)
@@ -224,9 +231,12 @@ plotPCA$Colour <- paste0(plotPCA$Group, ": ", plotPCA$Time)
 plotPCA$Tissue[plotPCA$Tissue == "Cell"] <- "iPSC"
 plotPCA$Tissue <- factor(plotPCA$Tissue, levels = c("iPSC", "Dorsal", "Ventral"))
 
+# Set colors
 colors <- c("#6BAED6","#4292C6","#2171B5","#084594",
             "#FB6A4A","#EF3B2C","#CB181D","#99000D")
-plot <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
+
+# Make plot
+p <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
   geom_point(size = 3) +
   xlab(paste0("PC1 (", expl_var[1]*100,"%)")) +
   ylab(paste0("PC2 (", expl_var[2]*100,"%)")) +
@@ -243,12 +253,14 @@ plot <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
                                        linetype = 1)) +
   guides(color = guide_legend("Group: Time"), shape = guide_legend("Region"))
 
-ggsave(filename = "PCAscores_Proteins.png", plot, width = 7, height = 5)
+ggsave(filename = "QCplots/PCAscores.png", p, width = 7, height = 5)
 
 
 #*****************************************************************************#
 #   Boxplots
 #*****************************************************************************#
+
+# Load data
 load("pxData_imp.RData")
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
 
@@ -260,11 +272,11 @@ sampleInfo$SampleID1 <- paste(sampleInfo$Group,
                               sampleInfo$Replicate,
                               sep = "_")
 exprPlot <- inner_join(exprPlot, sampleInfo, by = c("key" = "SampleID1"))
-
 exprPlot$Colour <- paste0(exprPlot$Group, ": ", exprPlot$Time)
 exprPlot$Tissue[exprPlot$Tissue == "Cell"] <- "iPSC"
 exprPlot$Tissue <- factor(exprPlot$Tissue, levels = c("Dorsal","iPSC",  "Ventral"))
 
+# Set sample order for plot
 order <- arrange(exprPlot, by = Time)
 orderSamples <- unique(order$key)
 exprPlot$key <- factor(exprPlot$key,
@@ -339,11 +351,15 @@ finalPlot <- p + colSideColorPlot_time + colSideColorPlot_tissue +
   plot_layout(nrow = 3, ncol = 1, heights = c(8.6,0.7,0.7))
 
 # Save plot
-ggsave(finalPlot, file = "Boxplots_Proteins.png", width = 8.5, height = 6)
+ggsave(finalPlot, file = "QCplots/Boxplots.png", width = 8.5, height = 6)
 
+
+#*****************************************************************************#
+#   Density plot
+#*****************************************************************************#
 
 # Make density plot
-exprBoxplot <- ggplot() +
+densityPlot <- ggplot() +
   geom_density(data = exprPlot, aes(x = value, color = key)) +
   ylab(expression(log[2]~"intensity")) +
   xlab("")+
@@ -359,14 +375,17 @@ exprBoxplot <- ggplot() +
   scale_color_viridis_d()
 
 # Save plot
-ggsave(exprBoxplot, file = "Density_Proteins.png", width = 8, height = 5)
+ggsave(densityPlot, file = "QCplots/Density.png", width = 8, height = 5)
 
+#*****************************************************************************#
+#   Get protein annotations
+#*****************************************************************************#
 
-# Make protein annotation data
+# Select biomaRt dataset
 ensembl = useMart("ensembl")
 ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
 
-#biomaRt::listAttributes(ensembl)
+# Get annotations
 annotations1 <- getBM(attributes=c("uniprot_gn_id",
                                   "hgnc_symbol",
                                   "chromosome_name",
@@ -376,12 +395,11 @@ annotations1 <- getBM(attributes=c("uniprot_gn_id",
                      mart = ensembl)
 
 annotations <- annotations1[!duplicated(annotations1[,c(1,2,4)]),]
-
 rowAnn <- data.frame(ID = rownames(pxMatrix_imp),
                      Name = str_remove(rownames(pxMatrix_imp), "-.*"))
-
 annotations <- right_join(annotations, rowAnn, by = c("uniprot_gn_id" = "Name"))
 all(rownames(pxMatrix_imp) %in% annotations$ID)
 
-save(annotations, file = "Preprocessing/Proteins/proteinAnnotation.RData")
+# Save annotations
+save(annotations, file = "proteinAnnotation.RData")
 

@@ -14,27 +14,27 @@ firstup <- function(x) {
   x
 }
 
-#==============================================================================#
-# Gene expression
-#==============================================================================#
+# Set working directory
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/6. Regulators")
 
 # Load data:
 
 # GO terms
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData")
 
 # GO annotation
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
 
 # Gene annotation
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 
 # Expression matrix
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
+load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 
 # Sample info
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
 sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
 
 
@@ -65,5 +65,6 @@ for (i in 1:length(terms_ordered)){
   
 }
 
-save(eigengenes, file = "D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/eigengenes_all.RData")
+# Save data
+save(eigengenes, file = "Data/eigengenes_all.RData")
 

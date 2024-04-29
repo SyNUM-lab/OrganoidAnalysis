@@ -14,14 +14,14 @@ library(org.Hs.eg.db)
 library(rrvgo)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
 
 # Load data
-load("Proteins/Preprocessing/pxData_imp.RData")
+load("pxData_imp.RData")
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
-load("Proteins/Preprocessing/proteinAnnotation.RData")
+load("proteinAnnotation.RData")
 all(annotations$uniprot_gn_id %in% str_remove(rownames(pxMatrix_imp), "-.*"))
-load("Data/sampleInfo.RData")
 
 #******************************************************************************#
 # Make plot
@@ -144,4 +144,5 @@ finalPlot <- ggarrange(mainPlot,
 # Print plot
 finalPlot
 
-ggsave(finalPlot, file = paste0("Proteins/Preprocessing/ApoptoticProteins.png"), width = 7, height = 5)
+# Save plot
+ggsave(finalPlot, file = paste0("QCplots/ApoptoticProteins.png"), width = 7, height = 5)

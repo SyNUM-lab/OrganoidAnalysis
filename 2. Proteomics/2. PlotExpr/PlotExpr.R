@@ -11,14 +11,15 @@ library(ggpubr)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/2. PlotExpr")
 
 # Load data
-load("Proteins/Preprocessing/pxData_imp.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"pxData_imp.RData"))
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
-load("Proteins/Preprocessing/DEresults_px.RData")
-load("Data/SampleInfo.RData")
-load("Proteins/Preprocessing/proteinAnnotation.RData")
+load(paste0(preprocessing_dir,"DEresults_px.RData"))
+load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
 
 # Get p-values
 pvalues <- DEresults_px[,3:9]
@@ -34,16 +35,8 @@ for (i in 1:ncol(pvalues)){
 logFCs <- DEresults_px[,str_detect(colnames(DEresults_px), "ratio")]
 rownames(logFCs) <- DEresults_px$name
 
-# Extreme changes
-sigMatrix <- matrix((abs(logFCs) > 3) & (adjpvalues < 10^-5), ncol = ncol(logFCs))
-rownames(adjpvalues)[rowSums(sigMatrix) > 0]
-
-imputeInfo <- pxData_imp@elementMetadata@listData
-
-
 #******************************************************************************
 #******************************************************************************
-#"P09488" "Q14914" "P04083" "P07099"
 
 annotations[which(annotations$hgnc_symbol == "LY6H"),]
 selectedProtein <- "O94772-2"
@@ -135,7 +128,8 @@ finalPlot <- ggarrange(mainPlot,
 # Print plot
 finalPlot
 
-ggsave(finalPlot, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/Plots/RPL8.png", width = 7, height = 4)
+# Save plot
+ggsave(finalPlot, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/Plots/LY6H.png", width = 7, height = 4)
 
 
 

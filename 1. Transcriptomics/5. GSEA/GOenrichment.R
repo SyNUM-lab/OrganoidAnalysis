@@ -19,6 +19,7 @@ firstup <- function(x) {
   x
 }
 
+# Set working directory
 setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
 
 # Load data
@@ -426,8 +427,6 @@ finalPlot <- ggarrange(mainPlot,
 # Print plot
 finalPlot
 ggsave(finalPlot, file = paste0("Plots/",termName,"_expr.png"), width = 10, height = 8)
-
-
 
 
 ###############################################################################

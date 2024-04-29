@@ -1,5 +1,4 @@
 
-
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
@@ -16,53 +15,7 @@ library(org.Hs.eg.db)
 library(rrvgo)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
-
-# Load data
-load("Proteins/Preprocessing/pxData_imp.RData")
-pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
-load("Proteins/Preprocessing/DEresults_px.RData")
-load("Proteins/Preprocessing/proteinAnnotation.RData")
-all(annotations$uniprot_gn_id %in% str_remove(rownames(pxMatrix_imp), "-.*"))
-load("Data/sampleInfo.RData")
-
-# Get p-values
-pvalues <- DEresults_px[,3:9]
-rownames(pvalues) <- DEresults_px$name
-
-# get adjusted p-values
-adjpvalues <- pvalues
-for (i in 1:ncol(pvalues)){
-  adjpvalues[,i] <- p.adjust(pvalues[,i], "fdr")
-}
-
-# Get logFCs
-logFCs <- DEresults_px[,str_detect(colnames(DEresults_px), "ratio")]
-rownames(logFCs) <- DEresults_px$name
-
-
-###############################################################################
-
-# validate processes from transcriptomics
-
-###############################################################################
-# Clear workspace and console
-rm(list = ls())
-cat("\014") 
-gc()
-
-# Load packages
-library(tidyverse)
-library(stringr)
-library(ggpubr)
-library(biomaRt)
-library(patchwork)
-library(clusterProfiler)
-library(org.Hs.eg.db)
-library(rrvgo)
-
-# Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/4. GSEA")
 
 # Capitalize first letter
 firstup <- function(x) {
@@ -71,12 +24,12 @@ firstup <- function(x) {
 }
 
 # Load data
-load("D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/GSEA/GOresults_GSEA.RData")
-load("D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/GSEA/GOresults_NES_GSEA.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_UNIPROT.RData")
+load("GOresults_GSEA.RData")
+load("GOresults_NES_GSEA.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_UNIPROT_Hs.RData")
 rownames(GOannotation) <- GOannotation$Name
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData")
 
 # Set column names of GO results
 colnames(GOresults) <- c("Name", "Cell_D0", "Dorsal_D13", "Dorsal_D40", 
@@ -93,10 +46,10 @@ values_fil <- values[terms_ordered,]
 plotData <- gather(values_fil)
 plotData$Name <- rep(rownames(values_fil),7)
 
-# combine with GO annotaiton
+# combine with GO annotation
 plotData <- inner_join(plotData, GOannotation, by = c('Name' = 'Name'))
 
-# Combine with adjusted pvalues
+# Combine with adjusted P values
 pvalues <- GOresults
 rownames(pvalues) <- GOresults$Name
 pvalues <- gather(pvalues[terms_ordered,2:8])
@@ -189,10 +142,10 @@ finalPlot <- ggarrange(colSideColorPlot_tissue,
                        common.legend = FALSE)
 
 # Save plot
-ggsave(finalPlot, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/ValidationGSEA/GOEnrichment_RTTvsIC_validation1.png", width = 8, height = 8)
+ggsave(finalPlot, file = "GOEnrichment_ProteomicsValidation.png", width = 8, height = 8)
 
 
-# Get legends:
+# Make legend
 legendPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(.~Region, scales = "free", space = "free") +
@@ -211,12 +164,10 @@ legendPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value
         legend.key.size = unit(2, 'cm'),
         legend.text = element_text(size=20))
 
-
 legend <- cowplot::get_legend(legendPlot)
 
-ggsave(legend, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/GOEnrichment/Plots/GOEnrichment_RTTvsIC_validation_legend.png", width = 8, height = 8)
-
-
+# Save legend
+ggsave(legend, file = "legend_GOEnrichment_ProteomicsValidation.png", width = 8, height = 8)
 
 
 ################################################################################
@@ -224,10 +175,6 @@ ggsave(legend, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/GOEnrichment/
 # Permutation analysis
 
 ################################################################################
-
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_UNIPROT.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -237,11 +184,11 @@ TERM2GENE <- data.frame(TERM = unlist(lapply(seq_along(GOgenes_fil), function(x)
 TERM2NAME <- GOannotation[GOannotation$Name %in% terms_ordered, c(2,3)]
 colnames(TERM2NAME) <- c("TERM", "NAME")
 
-
+# Perform 1000-permutation
 results <- NULL
 set.seed(345)
 nPerm <- 1000
-for (i in 790:nPerm){
+for (i in 1:nPerm){
   
   gsea_input <- sample(1:nrow(pvalues),nrow(pvalues))
   names(gsea_input) <- str_remove(rownames(pvalues), "-.*")
@@ -275,9 +222,17 @@ for (i in 790:nPerm){
   
 }
 
-save(results, file = "Proteins/RTTvsIC/validationGSEA/permResults_validation1.RData")
+# Save permutation results
+save(results, file = "permResults_validation1.RData")
+
+# Load data (if needed)
+load("permResults_validation1.RData")
+
+# Make histogram to check uniform distribution
 hist(results$pvalue)
 
+
+# How many permutations have more than four significant GO terms?
 results_all <- NULL
 for (j in unique(results$term)){
   results_fil <- results[results$term == j,]
@@ -285,7 +240,5 @@ for (j in unique(results$term)){
   
   results_all <- rbind.data.frame(results_all, results_fil)
 }
-
-
 
 sum(table(results_all$permN[results_all$pvalue<0.05])>4)

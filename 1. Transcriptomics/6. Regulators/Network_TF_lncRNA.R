@@ -15,6 +15,9 @@ firstup <- function(x) {
   x
 }
 
+# Set working directory
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/6. Regulators")
+
 
 #==============================================================================#
 # Perform network construction using GENIE3
@@ -25,13 +28,14 @@ firstup <- function(x) {
 #..............................................................................#
 
 # Load protein expression data
-load("D:/RTTproject/CellAnalysis/Proteins/Preprocessing/proteinAnnotation.RData")
-proteinAnnotation <- annotations
-load("D:/RTTproject/CellAnalysis/Proteins/Preprocessing/pxData_imp.RData")
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"pxData_imp.RData"))
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
+load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
+proteinAnnotation <- annotations
 
 # Get transcription factors: http://humantfs.ccbr.utoronto.ca/download.php
-TFs <- data.table::fread("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/TFs.csv")
+TFs <- data.table::fread("Data/TFs.csv")
 TFs <- TFs[TFs$`Is TF?`=="Yes"]
 
 # Select expression values of TFs only
@@ -102,14 +106,13 @@ weightMat1 <- GENIE3(exprMatrix, regulators=regulators, targets = targets,
                      nTrees = 10000)
 
 # Save results
-save(weightMat1, file = "D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/weightMat_lncRNA.RData")
-
-
+save(weightMat1, file = "Data/weightMat_lncRNA_TF.RData")
 
 
 #==============================================================================#
 # Make plot
 #==============================================================================#
+
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
@@ -126,12 +129,27 @@ firstup <- function(x) {
   x
 }
 
-# Load data
-load("D:/RTTproject/CellAnalysis/Proteins/Preprocessing/proteinAnnotation.RData")
+
+# Weight matrix
+load("Data/weightMat_lncRNA_TF.RData")
+
+# Protein annotation data
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
 proteinAnnotation <- annotations
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/weightMat_lncRNA.RData")
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
+
+# Gene annotation data
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"geneAnnotation.RData"))
+
+# GO annotation data
+load(paste0("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/",
+            "GOannotation.RData"))
+
+# Selected GO terms
+load(paste0("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/",
+            "terms_ordered1.RData"))
+
 
 # Get regulatory interactions
 linkList <- getLinkList(weightMat1)
@@ -163,7 +181,6 @@ linkList_fil <- data.frame(regulatoryGene = c(linkList_TF$hgnc_symbol,
 linkList_fil <- left_join(linkList_fil, GOannotation,
                           by = c("targetTerm" = "Name"))
 linkList_fil$Description <- firstup(linkList_fil$Description)
-
 sel_IDs <- names(table(linkList_fil$regulatoryID))[table(linkList_fil$regulatoryID) > 2]
 linkList_fil <- linkList_fil[linkList_fil$regulatoryID %in% sel_IDs,]
 
@@ -173,22 +190,17 @@ isoGene <- unique(linkList_fil$regulatoryGene[which(duplicated(linkList_fil$regu
 linkList_fil$regulatoryGene[linkList_fil$regulatoryGene == isoGene] <- paste0(linkList_fil$regulatoryGene[linkList_fil$regulatoryGene == isoGene], "\n(",
                                                                              linkList_fil$regulatoryID[linkList_fil$regulatoryGene == isoGene],")")
 
-
-# prepare data
+# Prepare data for plotting
 plotData1 <- data.frame(source = as.character(linkList_fil$Description),
                         target = as.character(linkList_fil$regulatoryGene),
                         value = 1)
 
 
 # Set order
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
 rownames(GOannotation) <- GOannotation$Name
 terms_ordered_descr <- firstup(GOannotation[terms_ordered,"Description"])
-
 terms_ordered_descr[nchar(terms_ordered_descr)>20] <- paste0(substring(terms_ordered_descr[nchar(terms_ordered_descr)>20],1,17),"...")
 plotData1$source[nchar(plotData1$source)>20] <- paste0(substring(plotData1$source[nchar(plotData1$source)>20],1,17),"...")
-
-
 plotData1$order <- factor(plotData1$source,
                           levels = terms_ordered_descr)
 plotData1 <- arrange(plotData1, by = order)
@@ -201,6 +213,7 @@ groups <- c(rep("GO term", length(unique(plotData1$source))),
             )
 names(groups) <- order
 
+# Set colors of groups
 yellows <- grDevices::colorRampPalette(c("white","#DBA800"))
 greens <- grDevices::colorRampPalette(c("white","darkgreen"))
 
@@ -211,8 +224,9 @@ colors <- c(RColorBrewer::brewer.pal(n = 6, "Blues"),
 )
 names(colors) <- order
 
-# Load proteomics data
-load("D:/RTTproject/CellAnalysis/Proteins/Preprocessing/DEresults_px.RData")
+# Load proteomics statistics
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"DEresults_px.RData"))
 
 # Get p-values
 pvalues_px <- DEresults_px[,3:9]
@@ -230,8 +244,9 @@ rownames(logFCs_px) <- DEresults_px$name
 
 values_px <- -log10(pvalues_px)*sign(logFCs_px)
 
-# Load transcriptomics data
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/DEresults_RTTvsIC_gx.RData")
+# Load transcriptomics statistics
+preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 genes_all <- rownames(topList[[1]])
 
 # Get p-values
@@ -299,11 +314,9 @@ plotData <- inner_join(plotData, unique(all_annotations),
                        by = c("Name" = "ID"))
 
 
-# Set colors
+# Set colors for statistics
 colfunc <- grDevices::colorRampPalette(c("#000072", "white","red"))
 vec_col <- colfunc(1000)
-
-
 plotData$value1 <- log(abs(plotData$value))*sign(plotData$value)
 test <- (round((plotData$value + max(abs(plotData$value))) * (999/max((plotData$value + max(abs(plotData$value))))))+1)
 plotData$color <- vec_col[test]
@@ -313,7 +326,9 @@ tr_df <- data.frame(
   region = c(rep("Ventral",3), "iPSC", rep("Dorsal",3))
 )
 
-jpeg("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Eigengene/Network_test4.png", width = 8000, height = 8000, quality = 100)
+
+# Make plot
+jpeg("TF_lncRNA_regulatoryNetwork.png", width = 8000, height = 8000, quality = 100)
 circos.clear()
 circos.par(start.degree = 257, 
            gap.degree = 4, 

@@ -10,14 +10,15 @@ library(biomaRt)
 library(edgeR)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Splicing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/7. Splicing"))
 
 # Load data
-load("IsoPctMatrix.RData")
-load("txMatrix_raw.RData")
-load("txAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_raw1.RData")
+load("Data/IsoPctMatrix.RData")
+load("Data/txMatrix_raw.RData")
+load("Data/txAnnotation.RData")
+load(paste0(homeDir,"/sampleInfo.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/gxMatrix_raw1.RData"))
 
 #==============================================================================#
 # PCA
@@ -75,15 +76,17 @@ ggsave(filename = "PCA_Scores_IsoPct.png", p, width = 7, height = 5)
 # differential splicing analysis
 #==============================================================================#
 
-# Filter lowly expressed transcripts
+# Filter lowly expressed transcripts:
+
+# 1) transcript with a count of 10 or more in at least one of the experimental group
 rownames(sampleInfo) <- sampleInfo$SampleID
 RTT_samples <- sampleInfo$SampleID[sampleInfo$Group == "RTT"]
 IC_samples <- sampleInfo$SampleID[sampleInfo$Group == "IC"]
-
 keep_RTT <- rownames(txMatrix_raw)[rowSums(txMatrix_raw[,RTT_samples]<10)==0]
 keep_IC <- rownames(txMatrix_raw)[rowSums(txMatrix_raw[,IC_samples]<10)==0]
 IsoPctMatrix_fil <- IsoPctMatrix[union(keep_RTT,keep_IC),]
 
+# 2) Transcripts from genes with a count of at least 50
 keep_genes <- rownames(gxMatrix_raw)[rowSums(gxMatrix_raw < 50)==0]
 keep_transcripts <- txAnnotation$transcript_id[txAnnotation$gene_id %in% keep_genes]
 IsoPctMatrix_fil <- IsoPctMatrix_fil[rownames(IsoPctMatrix_fil) %in% keep_transcripts,]
@@ -118,13 +121,14 @@ for (j in 1:nrow(comps)){
                                       & sampleInfo$Tissue == tissue &
                                         sampleInfo$Group == "IC")]
     
-    # Collect RTT expression values
+    # Collect RTT isoform percentage values
     X_RTT <- IsoPctMatrix_fil[i,samplesRTT]
     
-    # Collect IC expession values
+    # Collect IC isoform percentage values
     X_IC <- IsoPctMatrix_fil[i,samplesIC]
     
-    # independent 2-group Mann-Whitney U Test
+    # Independent 2-group Mann-Whitney U Test:
+    # Is the isoform percentage different between the experimental groups?
     pvalue[i,j] <- wilcox.test(X_RTT, X_IC)[["p.value"]]
     
     # mean difference
@@ -138,171 +142,22 @@ rownames(diff) <- rownames(IsoPctMatrix_fil)
 colnames(pvalue) <- paste0(comps$Time, "_", comps$Tissue)
 rownames(pvalue) <- rownames(IsoPctMatrix_fil)
 
-save(pvalue,diff,file = "DASResults.RData")
+# Save results
+save(pvalue,diff,file = "Data/DASResults.RData")
 
+# Get genes that are differentially alternative spliced:
+# genes with transcripts with a P <= 0.1 in more than three time points/regions
 load("DASResults.RData")
 sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) > 3)]
-
 t <- table(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel]) > 1
 DASgenes <- names(t)[t]
-save(DASgenes, file = "DASgenes.RData")
-
-sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) > 6)]
-t <- table(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel]) > 1
-DASgenes <- names(t)[t]
-
-#==============================================================================#
-# Length isoforms
-#==============================================================================#
-
-# Clear workspace and console
-rm(list = ls())
-cat("\014") 
-gc()
-
-# Load packages
-library(tidyverse)
-library(data.table)
-library(biomaRt)
-library(edgeR)
-library(patchwork)
-library(scales)
-
-# Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Splicing")
-
-# Load data
-load("IsoPctMatrix.RData")
-load("txMatrix_raw.RData")
-load("txAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("DASgenes.RData")
-load("DASResults.RData")
-
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-
-translation_genes <- geneAnnotation$gene_id[geneAnnotation$EnsemblID %in% GOgenes[["GO:0000375"]]]
-
-plotDF <- NULL
-for (time in colnames(diff)){
-  sel <- rownames(pvalue)[which((pvalue[,time] <= 0.1))]
-  sel_up <- rownames(pvalue)[which((pvalue[,time] <= 0.1) & (diff[,time] > 0))]
-  sel_down <- rownames(pvalue)[which((pvalue[,time] <= 0.1) & (diff[,time] < 0))]
-  
-  # Select genes with at least one up and one downregulated isform
-  genes_up <- unique(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel_up])
-  genes_down <- unique(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel_down])
-  genes_sel <- unique(intersect(genes_up,genes_down))
-  genes_sel <- intersect(genes_sel,translation_genes)
-  
-  for (g in genes_sel){
-    t_up <- intersect(txAnnotation$transcript_id[txAnnotation$gene_id == g], sel_up)
-    t_down <- intersect(txAnnotation$transcript_id[txAnnotation$gene_id == g], sel_down)
-    for (t in t_up){
-      temp <- data.frame(Up = rep(t,length(t_down)),
-                         Down = t_down,
-                         Up_value = rep(txAnnotation$length[txAnnotation$transcript_id %in% t],length(t_down)),
-                         Down_value = txAnnotation$length[txAnnotation$transcript_id %in% t_down],
-                         TimeRegion = rep(time,length(t_down))
-      )
-      plotDF <- rbind.data.frame(plotDF, temp)
-    }
-  }
-  
-}
-
-#[1] "D0_Cell"     "D13_Dorsal"  "D13_Ventral" "D40_Dorsal"  "D40_Ventral" "D75_Dorsal" 
-# [7] "D75_Ventral"
-mean(plotDF$Up_value[plotDF$TimeRegion =="D0_Cell"]/plotDF$Down_value[plotDF$TimeRegion =="D0_Cell"])
-median(plotDF$Up_value[plotDF$TimeRegion =="D0_Cell"]/plotDF$Down_value[plotDF$TimeRegion =="D0_Cell"])
-
-
-mean(log(plotDF$Up_value[plotDF$TimeRegion =="D13_Dorsal"]/plotDF$Down_value[plotDF$TimeRegion =="D13_Dorsal"]))
-median(plotDF$Up_value[plotDF$TimeRegion =="D13_Dorsal"]/plotDF$Down_value[plotDF$TimeRegion =="D13_Dorsal"])
-
-
-ggplot(plotDF) +
-  geom_point(aes(y = log(Down_value), x = log(Up_value))) +
-  geom_abline(intercept = 0, slope = 1, color = "red")
-
-
-
-#==============================================================================#
-# Investigate cytoplasmic translation
-#==============================================================================#
-
-# Clear workspace and console
-rm(list = ls())
-cat("\014") 
-gc()
-
-# Load packages
-library(tidyverse)
-library(data.table)
-library(biomaRt)
-library(edgeR)
-library(patchwork)
-library(scales)
-
-# Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Splicing")
-
-# Load data
-load("IsoPctMatrix.RData")
-load("txMatrix_raw.RData")
-load("txAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("DASgenes.RData")
-load("DASResults.RData")
-
-
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-
-translation_genes <- geneAnnotation$gene_id[geneAnnotation$EnsemblID %in% GOgenes[["GO:0002181"]]]
-translation_genes <- intersect(DASgenes,translation_genes)
-
-
-
-sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) > 3)]
-#txAnnotation_sel <- txAnnotation[txAnnotation$transcript_id %in% sel,]
-txAnnotation_sel <- txAnnotation[txAnnotation$gene_id %in% translation_genes,]
-txAnnotation_sel <- txAnnotation_sel[txAnnotation_sel$gene_id %in% rownames(gxMatrix_norm),]
-
-txAnnotation_sel$Value <- rep(NA, nrow(txAnnotation_sel))
-all(colnames(gxMatrix_norm) == colnames(IsoPctMatrix))
-
-for (i in 1:nrow(txAnnotation_sel)){
-  IsoPct <- (IsoPctMatrix[txAnnotation_sel$transcript_id[i],]/100)
-  gxExpr <- 2^(gxMatrix_norm[txAnnotation_sel$gene_id[i],])-1
-  
-  txAnnotation_sel$Value[i] <- cor(IsoPct,gxExpr, method = "spearman")
-  
-}
-
-ggplot(txAnnotation_sel) +
-  geom_point(aes(x = transcript_id, y = Value)) +
-  facet_grid(cols = vars(gene_id), scale = "free", space = "free")
+save(DASgenes, file = "Data/DASgenes.RData")
 
 
 #==============================================================================#
 # Make plots
 #==============================================================================#
 
-# [1] "ENSG00000100744_GSKIP"    "ENSG00000106484_MEST"     "ENSG00000114796_KLHL24"  
-# [4] "ENSG00000120071_KANSL1"   "ENSG00000127022_CANX"     "ENSG00000129195_PIMREG"  
-# [7] "ENSG00000129484_PARP2"    "ENSG00000143727_ACP1"     "ENSG00000147274_RBMX"    
-# [10] "ENSG00000158373_H2BC5"    "ENSG00000163682_RPL9"     "ENSG00000168653_NDUFS5"  
-# [13] "ENSG00000170291_ELP5"     "ENSG00000198453_ZNF568"   "ENSG00000198825_INPP5F"  
-# [16] "ENSG00000221983_UBA52"    "ENSG00000224078_SNHG14"   "ENSG00000250337_PURPL"   
-# [19] "ENSG00000274512_TBC1D3L"  "ENSG00000285756"          "ENSG00000289047"         
-# [22] "ENSG00000290376_HERC2P3"  "ENSG00000291003"          "ENSG00000291093_SVIL-AS1"
-
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
@@ -317,23 +172,19 @@ library(patchwork)
 library(scales)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Splicing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/7. Splicing"))
 
 # Load data
-load("IsoPctMatrix.RData")
-load("txMatrix_raw.RData")
-load("txAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/Data/sampleInfo.RData")
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/gxMatrix_norm.RData")
-load("DASgenes.RData")
-
-
-load("D:/RTTproject/CellAnalysis/Genes/Preprocessing/geneAnnotation.RData")
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOgenes_ENSEMBL.RData"))
-load(paste0("D:/RTTproject/CellAnalysis/GO_annotation/","GOannotation.RData"))
-
-translation_genes <- geneAnnotation$gene_id[geneAnnotation$EnsemblID %in% GOgenes[["GO:0002181"]]]
-intersect(DASgenes,translation_genes)
+load("Data/IsoPctMatrix.RData")
+load("Data/txMatrix_raw.RData")
+load("Data/txAnnotation.RData")
+load("Data/DASgenes.RData")
+load(paste0(homeDir,"/sampleInfo.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/gxMatrix_norm.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/geneAnnotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
 
 # Put samples in correct order
 samples <- sampleInfo$SampleID
@@ -341,12 +192,13 @@ gxMatrix_norm <- gxMatrix_norm[,samples]
 IsoPctMatrix <- IsoPctMatrix[,samples]
 sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
 
-#gene <- DASgenes[2]
+# Select gene
 gene <- "ENSG00000092964_DPYSL2" 
 transcripts <- txAnnotation$transcript_id[txAnnotation$gene_id == gene]
 geneExpr <- 2^gxMatrix_norm[gene,]-1
 IsoPct <- IsoPctMatrix[transcripts,]/100
 
+# Collect isoform percentage and expression values into data frame
 IsoPctValue <- NULL
 IsoExprValue <- NULL
 tid <- NULL
@@ -365,8 +217,8 @@ plotDF <- data.frame(IsoPctValue = IsoPctValue,
                      tid = tid,
                      sampleid = sampleid)
 
+# Combine with sample information
 plotDF <- inner_join(plotDF,sampleInfo, by = c("sampleid" = "SampleID"))
-
 plotDF$TimeRegion <- paste0(plotDF$Tissue, "_",plotDF$Time)
 plotDF$TimeRegion <- factor(plotDF$TimeRegion,levels = c("Dorsal_D75",
                                                          "Dorsal_D40",
@@ -378,13 +230,16 @@ plotDF$TimeRegion <- factor(plotDF$TimeRegion,levels = c("Dorsal_D75",
 plotDF <- arrange(plotDF, by = TimeRegion)
 plotDF$sampleid <- factor(plotDF$sampleid, levels = unique(plotDF$sampleid))
 
+# Get transcript ID
 plotDF$tid <- unlist(lapply(str_split(plotDF$tid,"_"),function(x)x[[2]]))
 
+# Get total gene expression value
 plotDF1 <- plotDF %>%
   group_by(sampleid) %>%
   mutate(sumExpr = sum(IsoExprValue))
 plotDF1 <- unique(plotDF1[,4:11])
 
+# Plot of gene expression values
 p1 <- ggplot(plotDF1) +
   geom_bar(aes(x = sampleid,y=sumExpr),
            stat = "identity") +
@@ -399,6 +254,7 @@ p1 <- ggplot(plotDF1) +
         panel.grid.minor = element_blank())
 
 
+# Plot of isoform percentages
 p2 <- ggplot(plotDF) +
   geom_bar(aes(x = sampleid,y=IsoPctValue,fill = tid), 
            color = "black", width = 0.95,
@@ -453,9 +309,11 @@ colSideColorPlot_tissue <- ggplot(data = colSideColor) +
   scale_fill_brewer(palette = "Dark2")
 
 
+# Combine all subplots
 p_all <- p1 + p2 + colSideColorPlot_time + colSideColorPlot_tissue +
   patchwork::plot_layout(ncol = 1, nrow = 4,
                          heights = c(3,10,0.5,0.5))
 p_all
 
+# Save plot
 ggsave(p_all, file = "DPYSL2_splicing.png", width = 8, height = 7)

@@ -9,14 +9,16 @@ library(data.table)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Splicing")
+setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/7. Splicing")
 
+# Data directory (contains RSEM output)
+data_dir <- paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part", 1:7)
 
 # Get raw transcript expression values:
-for (i in 1:7){
+for (i in 1:length(data_dir)){
   
   # Get gene expression files
-  files <- list.files(path = paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i), pattern = ".isoforms.results")
+  files <- list.files(path = data_dir[i], pattern = ".isoforms.results")
   
   # Get sample names
   sampleNames <- str_remove(files, "_Clean_Data_unaligned.isoforms.results")
@@ -24,7 +26,7 @@ for (i in 1:7){
   for (j in 1:length(files)){
     
     # Read gene expression file
-    GeneExpr <- fread(paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i,"/",files[j]))
+    GeneExpr <- fread(paste0(data_dir[i],"/",files[j]))
     print(paste0(i,",",j,": ", nrow(GeneExpr)))
     # Retrieve expression value from file
     GeneExpr <- GeneExpr[,c("transcript_id", "expected_count")]
@@ -44,14 +46,14 @@ for (i in 1:7){
 # Format data
 txMatrix_raw <- as.matrix(GeneExpr_all[,-1])
 rownames(txMatrix_raw) <- GeneExpr_all$transcript_id
-save(txMatrix_raw, file = "txMatrix_raw.RData")
+save(txMatrix_raw, file = "Data/txMatrix_raw.RData")
 
 
 # Get raw transcript percentage values:
-for (i in 1:7){
+for (i in 1:length(data_dir)){
   
   # Get gene expression files
-  files <- list.files(path = paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i), pattern = ".isoforms.results")
+  files <- list.files(path = data_dir[i], pattern = ".isoforms.results")
   
   # Get sample names
   sampleNames <- str_remove(files, "_Clean_Data_unaligned.isoforms.results")
@@ -59,7 +61,7 @@ for (i in 1:7){
   for (j in 1:length(files)){
     
     # Read gene expression file
-    GeneExpr <- fread(paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i,"/",files[j]))
+    GeneExpr <- fread(paste0(data_dir[i],"/",files[j]))
     print(paste0(i,",",j,": ", nrow(GeneExpr)))
     # Retrieve expression value from file
     GeneExpr <- GeneExpr[,c("transcript_id", "IsoPct")]
@@ -79,13 +81,13 @@ for (i in 1:7){
 # Format data
 IsoPctMatrix <- as.matrix(GeneExpr_all[,-1])
 rownames(IsoPctMatrix) <- GeneExpr_all$transcript_id
-save(IsoPctMatrix, file = "IsoPctMatrix.RData")
+save(IsoPctMatrix, file = "Data/IsoPctMatrix.RData")
 
 # Transcript annotation
 i = 1
 j = 1
-files <- list.files(path = paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i), pattern = ".isoforms.results")
-txAnnotation <- fread(paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part",i,"/",files[j]))
+files <- list.files(path = data_dir[i], pattern = ".isoforms.results")
+txAnnotation <- fread(paste0(data_dir[i],"/",files[j]))
 txAnnotation <- txAnnotation[,c("transcript_id","gene_id","length","effective_length")]
-save(txAnnotation, file = "txAnnotation.RData")
+save(txAnnotation, file = "Data/txAnnotation.RData")
 

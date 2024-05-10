@@ -9,7 +9,8 @@ library(tidyverse)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/3. Validation/RNAseq"))
 
 #==============================================================================#
 # GSE123753: Neuron
@@ -17,8 +18,8 @@ setwd("D:/RTTproject/CellAnalysis")
 
 # Load statistics
 accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/gxMatrix_raw.RData"))
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
+load(file = paste0(accessID,"/gxMatrix_raw.RData"))
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
 output <- top.table_Neuron
 
 # Get ENSEMBL IDs
@@ -30,13 +31,13 @@ annotations <- getBM(attributes=c("entrezgene_id",
                      filters = 'hgnc_symbol',
                      values = rownames(gxMatrix),
                      mart = ensembl)
-save(annotations, file = "Genes/Validation/HGNC2ENSEMBL.RData")
+
+save(annotations, file = "HGNC2ENSEMBL.RData")
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
-
 
 # Prepare data for GSEA
 gsea_input <- data.frame(value = -log(output$PValue)*sign(output$logFC),
@@ -52,9 +53,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -82,7 +83,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE123753_Neuron.RData")
+save(GOtest,file =  "GSE123753/GOtest_GSE123753_Neuron.RData")
 
 
 #==============================================================================#
@@ -91,11 +92,11 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE123753_Neuron.RData")
 
 # Load statistics
 accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
 
@@ -113,9 +114,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -143,7 +144,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE123753_NPC.RData")
+save(GOtest,file =  "GSE123753/GOtest_GSE123753_NPC.RData")
 
 
 #==============================================================================#
@@ -152,14 +153,13 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE123753_NPC.RData")
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_iPSC.RData"))
+load(file = paste0(accessID,"/top.table_iPSC.RData"))
 output <- top.table_iPSC
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
-
 
 # Prepare data for GSEA
 gsea_input <- data.frame(value = -log(output$PValue)*sign(output$logFC),
@@ -175,9 +175,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -205,7 +205,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_iPSC.RData")
+save(GOtest,file =  "GSE107399/GOtest_GSE107399_iPSC.RData")
 
 #==============================================================================#
 # GSE107399: NPC
@@ -213,11 +213,11 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_iPSC.RData")
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
 
@@ -235,9 +235,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -265,7 +265,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_NPC.RData")
+save(GOtest,file =  "GSE107399/GOtest_GSE107399_NPC.RData")
 
 #==============================================================================#
 # GSE107399: Neuron
@@ -273,11 +273,11 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_NPC.RData")
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
 output <- top.table_Neuron
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
 
@@ -296,9 +296,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -326,7 +326,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_Neuron.RData")
+save(GOtest,file =  "GSE107399/GOtest_GSE107399_Neuron.RData")
 
 #==============================================================================#
 # GSE117511: Organoids at multiple time points
@@ -334,14 +334,13 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE107399_Neuron.RData")
 
 # Load statistics
 accessID <- "GSE117511"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table.RData"))
+load(file = paste0(accessID,"/top.table.RData"))
 output <- top.table
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
-
 
 # Prepare data for GSEA
 gsea_input <- data.frame(value = -log(output$PValue)*sign(output$logFC),
@@ -357,9 +356,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -387,7 +386,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE117511.RData")
+save(GOtest,file =  "GSE117511/GOtest_GSE117511.RData")
 
 #==============================================================================#
 # GSE128380: Cingulate cortex (CC)
@@ -395,14 +394,13 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE117511.RData")
 
 # Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_CC.RData"))
+load(file = paste0(accessID,"/top.table_CC.RData"))
 output <- top.table_CC
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
-
 
 # Prepare data for GSEA
 gsea_input <- data.frame(value = -log(output$PValue)*sign(output$logFC),
@@ -418,9 +416,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -448,7 +446,7 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE128380_CC.RData")
+save(GOtest,file =  "GSE128380/GOtest_GSE128380_CC.RData")
 
 #==============================================================================#
 # GSE128380: Temporal cortex (TC)
@@ -456,14 +454,13 @@ save(GOtest,file =  "Genes/Validation/GOtest_GSE128380_CC.RData")
 
 # Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_TC.RData"))
+load(file = paste0(accessID,"/top.table_TC.RData"))
 output <- top.table_TC
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
 sum(duplicated(annotations$ensembl_gene_id))
-
 
 # Prepare data for GSEA
 gsea_input <- data.frame(value = -log(output$PValue)*sign(output$logFC),
@@ -479,9 +476,9 @@ gsea_vector <- setNames(gsea_input$value, gsea_input$ensembl_gene_id)
 gsea_vector <- sort(gsea_vector, decreasing = TRUE)
 
 # Load GO annotation
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -509,13 +506,14 @@ GOtest <- GSEA(
 results <- GOtest@result
 
 # Save output
-save(GOtest,file =  "Genes/Validation/GOtest_GSE128380_TC.RData")
+save(GOtest,file =  "GSE128380/GOtest_GSE128380_TC.RData")
 
 ###############################################################################
 
 # Make plot
 
 ###############################################################################
+
 # Clear workspace and console
 rm(list = ls())
 cat("\014") 
@@ -534,11 +532,12 @@ firstup <- function(x) {
 }
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/3. Validation/RNAseq"))
 
 # Load GO terms
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 rownames(GOannotation) <- GOannotation$Name
 terms_ordered_descr <- GOannotation[terms_ordered, "Description"]
@@ -546,31 +545,31 @@ terms_ordered_descr <- GOannotation[terms_ordered, "Description"]
 # Load results
 statList <- list()
 
-load("Genes/Validation/GOtest_GSE107399_NPC.RData")
+load("GSE107399/GOtest_GSE107399_NPC.RData")
 statList[["GSE107399_NPC"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE107399_iPSC.RData")
+load("GSE107399/GOtest_GSE107399_iPSC.RData")
 statList[["GSE107399_iPSC"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE107399_Neuron.RData")
+load("GSE107399/GOtest_GSE107399_Neuron.RData")
 statList[["GSE107399_Neuron"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE123753_NPC.RData")
+load("GSE123753/GOtest_GSE123753_NPC.RData")
 statList[["GSE123753_NPC"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE123753_Neuron.RData")
+load("GSE123753/GOtest_GSE123753_Neuron.RData")
 statList[["GSE123753_Neuron"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE117511.RData")
+load("GSE117511/GOtest_GSE117511.RData")
 statList[["GSE117511"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE128380_TC.RData")
+load("GSE128380/GOtest_GSE128380_TC.RData")
 statList[["GSE128380_TC"]] <- GOtest@result
 
-load("Genes/Validation/GOtest_GSE128380_CC.RData")
+load("GSE128380/GOtest_GSE128380_CC.RData")
 statList[["GSE128380_CC"]] <- GOtest@result
 
-
+# Prepare data for plotting
 plotDF <- NULL
 for (i in 1:length(statList)){
   temp <- data.frame(Description = statList[[i]]$Description,
@@ -599,6 +598,8 @@ setInfo <- data.frame(Set = c("GSE107399_NPC", "GSE107399_iPSC", "GSE107399_Neur
                       )
 
 plotDF <- inner_join(plotDF, setInfo, by = c("Set" = "Set"))
+
+# Set order of columns
 plotDF$Source <- factor(plotDF$Source,
                         levels = c("iPSC", "NPC", "Neuron",
                                    "Inter-\nneuron", 
@@ -621,7 +622,10 @@ setInfo$Study<- factor(setInfo$Study,
 
 plotDF <- plotDF[plotDF$Description %in% firstup(terms_ordered_descr),]
 
+# Set colors
 colors <- c("#E7298A","#66A61E","#E6AB02","#A6761D","#666666")
+
+# Make heatmap
 mainPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(cols = vars(Study), scale = "free", space = "free") +
@@ -637,7 +641,7 @@ mainPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Value,
         strip.background = element_blank(),
         strip.text.x = element_blank())
 
-# Time
+# Data set colour on top
 colSideColorPlot <- ggplot(data = setInfo) +
   geom_tile(aes(x = Source, y = "label", fill = Study)) +
   facet_grid(.~Study, scales = "free", space = "free") +
@@ -657,10 +661,9 @@ finalPlot <- ggarrange(colSideColorPlot,
                        align = "v",
                        common.legend = FALSE)
 
-ggsave(finalPlot, file = "Genes/Validation/GOEnrichment_RTTvsIC1.png", 
+# Save plot
+ggsave(finalPlot, file = "GOEnrichment_RTTvsIC.png", 
        width = 8, height = 8)
-
-
 
 
 # Get legends:
@@ -678,7 +681,7 @@ legendPlot <- ggplot(data = setInfo) +
 
 legend <- cowplot::get_legend(legendPlot)
 
-ggsave(legend, file = "Genes/Validation/legend1.png", width = 8, height = 8)
+ggsave(legend, file = "legend1_GOEnrichment_RTTvsIC.png", width = 8, height = 8)
 
 # Get legends:
 legendPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Value,  color = Sig)) +
@@ -701,85 +704,72 @@ legendPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Valu
 
 legend <- cowplot::get_legend(legendPlot)
 
-ggsave(legend, file = "Genes/Validation/legend2.png", width = 8, height = 8)
+ggsave(legend, file = "legend2_GOEnrichment_RTTvsIC.png", width = 8, height = 8)
+
 
 #==============================================================================#
 # Perform permutation analysis to validate findings
 #==============================================================================#
 
+# Load statistics:
 all_genes <- list()
-# Load statistics
-accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
-output <- top.table_Neuron
 
+accessID <- "GSE123753"
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
+output <- top.table_Neuron
 all_genes[[1]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
-
 all_genes[[2]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_iPSC.RData"))
+load(file = paste0(accessID,"/top.table_iPSC.RData"))
 output <- top.table_iPSC
-
 all_genes[[3]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
-
 all_genes[[4]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
 output <- top.table_Neuron
-
 all_genes[[5]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE117511"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table.RData"))
+load(file = paste0(accessID,"/top.table.RData"))
 output <- top.table
-
 all_genes[[6]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_CC.RData"))
+load(file = paste0(accessID,"/top.table_CC.RData"))
 output <- top.table_CC
-
 all_genes[[7]] <- rownames(output)
 
-# Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_TC.RData"))
+load(file = paste0(accessID,"/top.table_TC.RData"))
 output <- top.table_TC
-
 all_genes[[8]] <- rownames(output)
 
+# Mean number of genes that pass QC
 nGenes <- round(mean(unlist(lapply(all_genes, length))))
+
+# union of all genes
 unionGenes <- unique(unlist(all_genes))
 
 # Load annotation
-load("Genes/Validation/HGNC2ENSEMBL.RData")
+load("HGNC2ENSEMBL.RData")
 annotations <- unique(annotations[!is.na(annotations$ensembl_gene_id),2:3])
-
 gene_vector  <- annotations$ensembl_gene_id[annotations$hgnc_symbol %in% unique(unlist(all_genes))]
 gene_vector <- unique(gene_vector[!is.na(gene_vector)])
 
-
 # Load GO annotation
-setwd("D:/RTTproject/CellAnalysis")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL.RData")
-load("Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Prepare TERM2GENE and TERM2NAME objects
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
@@ -825,11 +815,10 @@ for (i in 1:nPerm){
   
 }
 
-save(results, file = "Genes/Validation/permResults_validation1.RData")
+# Save results
+save(results, file = "permResults_validation.RData")
+
+load("permResults_validation.RData")
 hist(results$pvalue)
-
-results_fil <- results[results$term != "external encapsulating structure organization",]
-
 results$permN <- rep(1:1000,each = 26)
-
 sum(table(results$permN[results$pvalue<0.05])>5)

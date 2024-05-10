@@ -1,19 +1,29 @@
+
 # Clear workspace and console
 rm(list = ls())
-cat("\014") 
+cat("\014")
+gc()
 
 # Load packages
 library(tidyverse)
 library(ggpubr)
+library(readxl)
+library(meta)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/3. Validation/RNAseq"))
 
+#==============================================================================#
+# Gather validation sets
+#==============================================================================#
+
+# Threshold for significance
 pvalue_thres <- 0.05
 logFC_thres <- 1
 p_type <- "PValue"
-#p_type <- "FDR"
 
+# Make empty lists
 up_genes <- list()
 down_genes <- list()
 both_genes <- list()
@@ -21,7 +31,7 @@ all_genes <- list()
 
 # Load statistics
 accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
 output <- top.table_Neuron
 
 up_genes[[1]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -31,7 +41,7 @@ all_genes[[1]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE123753"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
 
 up_genes[[2]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -41,7 +51,7 @@ all_genes[[2]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_iPSC.RData"))
+load(file = paste0(accessID,"/top.table_iPSC.RData"))
 output <- top.table_iPSC
 
 up_genes[[3]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -51,7 +61,7 @@ all_genes[[3]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_NPC.RData"))
+load(file = paste0(accessID,"/top.table_NPC.RData"))
 output <- top.table_NPC
 
 up_genes[[4]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -61,7 +71,7 @@ all_genes[[4]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE107399"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_Neuron.RData"))
+load(file = paste0(accessID,"/top.table_Neuron.RData"))
 output <- top.table_Neuron
 
 up_genes[[5]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -71,7 +81,7 @@ all_genes[[5]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE117511"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table.RData"))
+load(file = paste0(accessID,"/top.table.RData"))
 output <- top.table
 
 up_genes[[6]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -81,7 +91,7 @@ all_genes[[6]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_CC.RData"))
+load(file = paste0(accessID,"/top.table_CC.RData"))
 output <- top.table_CC
 
 up_genes[[7]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -91,7 +101,7 @@ all_genes[[7]] <- rownames(output)
 
 # Load statistics
 accessID <- "GSE128380"
-load(file = paste0("D:/RTTproject/PublicDatasets/", accessID,"/top.table_TC.RData"))
+load(file = paste0(accessID,"/top.table_TC.RData"))
 output <- top.table_TC
 
 up_genes[[8]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$logFC > logFC_thres)]
@@ -99,12 +109,12 @@ down_genes[[8]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (output$l
 both_genes[[8]] <- rownames(output)[(output[,p_type] < pvalue_thres) & (abs(output$logFC) > logFC_thres)]
 all_genes[[8]] <- rownames(output)
 
-
-
-# Evaluate
+#==============================================================================#
+# Evaluate overrepresentation of imprinted genes
+#==============================================================================#
 
 # Get imprinted genes: https://www.geneimprint.com/site/genes-by-species
-imprintDF <- read_xlsx("D:/RTTproject/CellAnalysis/ImprintedGenes.xlsx")
+imprintDF <- read_xlsx(paste0(homeDir,"/1. Transcriptomics/8. Imprinting/ImprintedGenes.xlsx"))
 imprintDF <- imprintDF[imprintDF$Status %in% unique(imprintDF$Status)[c(1,2,3)],]
 
 results_up <- matrix(NA,nrow = length(both_genes), ncol = 4)
@@ -193,117 +203,31 @@ for (d in 1:length(both_genes)){
   results_both[d,] <- c(output$p.value,output$estimate,output$conf.int)
 }
 
-
-################################################################################
-
-# Get statistics
-
-################################################################################
-library(meta)
-m.gen <- metagen(TE = log(results_down[,2]),
-                 lower = log(results_down[,3]),
-                 upper = log(results_down[,4]),
-                 studlab = paste0("test",1:8),
-                 sm = "OR",
-                 fixed = FALSE,
-                 random = TRUE,
-                 method.tau = "REML",
-                 hakn = TRUE)
-
-summary(m.gen)
-
-
-m.gen <- metagen(TE = log(results_up[,2]),
-                 lower = log(results_up[,3]),
-                 upper = log(results_up[,4]),
-                 studlab = paste0("test",1:8),
-                 sm = "OR",
-                 fixed = FALSE,
-                 random = TRUE,
-                 method.tau = "REML",
-                 hakn = TRUE)
-
-summary(m.gen)
-
-
-m.gen <- metagen(TE = log(results_both[,2]),
-                 lower = log(results_both[,3]),
-                 upper = log(results_both[,4]),
-                 studlab = paste0("test",1:8),
-                 sm = "OR",
-                 fixed = FALSE,
-                 random = TRUE,
-                 method.tau = "REML",
-                 hakn = TRUE)
-
-summary(m.gen)
-
-plotDF <- rbind.data.frame(c(0.0003, 2.0587, 1.5959, 2.6556),
-                           c(0.0046, 2.3016, 1.4236, 3.7213),
-                           c(0.0070, 1.9864,1.2915, 3.0552))
-colnames(plotDF) <- c("Pvalue", "OR", "Lower", "Upper")
-
-
-
-plotDF$Set <- factor(c("Upregulated", "Downregulated", "Both"),
-                     levels = c("Downregulated", "Upregulated", "Both"))
-
-
-mainPlot <- ggplot() +
-  geom_hline(yintercept = 1, color = "black") +
-  geom_point(data = plotDF, aes(x = Set, y = OR, color = Set), size = 3) +
-  geom_segment(data = plotDF, aes(x = Set, xend = Set,y = Lower, yend = Upper, color = Set),
-               linewidth = 1) +
-  labs(color = NULL) +
-  scale_color_manual(values = c("#2171B5","#CB181D","#525252"))+
-  ylim(0,9.5) +
-  theme_bw() +
-  theme(axis.text.x = element_blank(),
-        axis.title.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        legend.position = "right",
-        strip.background = element_blank(),
-        strip.text.x = element_blank(),
-        panel.background = element_rect(fill = "#F0F0F0"),
-        legend.text = element_text(size = 12),
-        panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                        colour = "white"), 
-        panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                        colour = "white"),
-        axis.text.y = element_text(hjust = 1, vjust = 0.5,
-                                   margin = margin(t = 0, r = 2, b = 0, l = 0)),
-        axis.title.y = element_text(angle = 90, vjust = 1,
-                                    margin = margin(t = 0, r = 5, b = 0, l = 0),
-                                    size = 12))
-ggsave(mainPlot, 
-       file = "D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Imprinting/OR_imprinting_validation_pooled.png", 
-       width = 3.2, height = 4.5)
-
-################################################################################
-
+#==============================================================================#
 # Make plot
+#==============================================================================#
 
-################################################################################
+# Combine results into data frame
 plotDF <- rbind.data.frame(results_up,
                            results_down,
                            results_both)
 colnames(plotDF) <- c("Pvalue", "OR", "Lower", "Upper")
 plotDF$Dataset <- factor(c(rep("GSE123753",2),
-                    rep("GSE107399",3),
-                    "GSE117511",
-                    rep("GSE128380",2)),
-                    levels = c("GSE107399","GSE123753","GSE117511","GSE128380"))
+                           rep("GSE107399",3),
+                           "GSE117511",
+                           rep("GSE128380",2)),
+                         levels = c("GSE107399","GSE123753","GSE117511","GSE128380"))
 
 plotDF$Tissue <- factor(c("Neuron", "NPC",
-                   "iPSC", "NPC","Neuron",
-                   "Inter\nneuron",
-                   "Cingulate\ncortex", "Temporal\ncortex"),
-                   levels = c("iPSC", "NPC", "Neuron", 
-                   "Inter\nneuron",
-                   "Temporal\ncortex", "Cingulate\ncortex"))
+                          "iPSC", "NPC","Neuron",
+                          "Inter\nneuron",
+                          "Cingulate\ncortex", "Temporal\ncortex"),
+                        levels = c("iPSC", "NPC", "Neuron", 
+                                   "Inter\nneuron",
+                                   "Temporal\ncortex", "Cingulate\ncortex"))
 
 plotDF$DatasetTissue <- factor(paste0(plotDF$Tissue, "_",
-                               plotDF$Dataset),
+                                      plotDF$Dataset),
                                levels = paste0(c("iPSC", "NPC", "Neuron", 
                                                  "NPC", "Neuron",
                                                  "Inter\nneuron",
@@ -318,7 +242,7 @@ plotDF$DatasetTissue <- factor(paste0(plotDF$Tissue, "_",
 plotDF$Set <- factor(c(rep("Upregulated",8), rep("Downregulated",8), rep("Both",8)),
                      levels = c("Downregulated", "Upregulated", "Both"))
 
-
+# make plot
 mainPlot <- ggplot() +
   geom_hline(yintercept = 1, color = "black") +
   geom_point(data = plotDF, aes(x = Set, y = OR, color = Set), size = 3) +
@@ -381,8 +305,89 @@ finalPlot
 
 
 ggsave(finalPlot, 
-       file = "D:/RTTproject/CellAnalysis/Genes/RTTvsIC/Imprinting/OR_imprinting_validation.png", 
+       file = "OR_imprinting_validation.png", 
        width = 8, height = 4.5)
 
+#==============================================================================#
+# Perform meta analysis
+#==============================================================================#
 
+# Meta analysis for downregulated genes
+m.gen <- metagen(TE = log(results_down[,2]),
+                 lower = log(results_down[,3]),
+                 upper = log(results_down[,4]),
+                 studlab = paste0("test",1:8),
+                 sm = "OR",
+                 fixed = FALSE,
+                 random = TRUE,
+                 method.tau = "REML",
+                 hakn = TRUE)
 
+summary(m.gen)
+
+# Meta analysis for upregulated genes
+m.gen <- metagen(TE = log(results_up[,2]),
+                 lower = log(results_up[,3]),
+                 upper = log(results_up[,4]),
+                 studlab = paste0("test",1:8),
+                 sm = "OR",
+                 fixed = FALSE,
+                 random = TRUE,
+                 method.tau = "REML",
+                 hakn = TRUE)
+
+summary(m.gen)
+
+# Meta analysis for all differentially expressed genes
+m.gen <- metagen(TE = log(results_both[,2]),
+                 lower = log(results_both[,3]),
+                 upper = log(results_both[,4]),
+                 studlab = paste0("test",1:8),
+                 sm = "OR",
+                 fixed = FALSE,
+                 random = TRUE,
+                 method.tau = "REML",
+                 hakn = TRUE)
+
+summary(m.gen)
+
+# Combine results from meta analysis in data frame
+plotDF <- rbind.data.frame(c(0.0003, 2.0587, 1.5959, 2.6556),
+                           c(0.0046, 2.3016, 1.4236, 3.7213),
+                           c(0.0070, 1.9864,1.2915, 3.0552))
+colnames(plotDF) <- c("Pvalue", "OR", "Lower", "Upper")
+plotDF$Set <- factor(c("Upregulated", "Downregulated", "Both"),
+                     levels = c("Downregulated", "Upregulated", "Both"))
+
+# Make plot
+mainPlot <- ggplot() +
+  geom_hline(yintercept = 1, color = "black") +
+  geom_point(data = plotDF, aes(x = Set, y = OR, color = Set), size = 3) +
+  geom_segment(data = plotDF, aes(x = Set, xend = Set,y = Lower, yend = Upper, color = Set),
+               linewidth = 1) +
+  labs(color = NULL) +
+  scale_color_manual(values = c("#2171B5","#CB181D","#525252"))+
+  ylim(0,9.5) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.position = "right",
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        panel.background = element_rect(fill = "#F0F0F0"),
+        legend.text = element_text(size = 12),
+        panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                        colour = "white"), 
+        panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                        colour = "white"),
+        axis.text.y = element_text(hjust = 1, vjust = 0.5,
+                                   margin = margin(t = 0, r = 2, b = 0, l = 0)),
+        axis.title.y = element_text(angle = 90, vjust = 1,
+                                    margin = margin(t = 0, r = 5, b = 0, l = 0),
+                                    size = 12))
+
+# Save plot
+ggsave(mainPlot, 
+       file = "OR_imprinting_validation_pooled.png", 
+       width = 3.2, height = 4.5)

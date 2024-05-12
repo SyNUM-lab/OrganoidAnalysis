@@ -13,6 +13,10 @@ library(readxl)
 library(chipseq)
 library(BSgenome.Mmusculus.UCSC.mm9)
 
+# Set working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/3. Validation/ChIPseq"))
+
 # Binning function
 BinChIPseq = function(reads, bins){
   mcols(bins)$score = countOverlaps(bins, reads) 
@@ -25,16 +29,16 @@ firstup <- function(x) {
   x
 }
 
-# Sequence information
+# Get sequence info
 genome = BSgenome.Mmusculus.UCSC.mm9
 si = seqinfo(genome)
-si = si[ paste0('chr', c(1:19, 'X', 'Y'))]
+si = si[ paste0('chr', c(1:19))]
 
 # Import BW files
-MeCP2_rep1 <- import.bw("D:/RTTproject/CellAnalysis/CHIPSeq/GSE71126_RAW/GSM1827604_MeCP2_ChIP_WT_rep1.extend200.coverage.mm9.bw")
-MeCP2_rep2 <- import.bw("D:/RTTproject/CellAnalysis/CHIPSeq/GSE71126_RAW/GSM1827605_MeCP2_ChIP_WT_rep2.extend200.coverage.mm9.bw")
-Input_rep1 <- import.bw("D:/RTTproject/CellAnalysis/CHIPSeq/GSE71126_RAW/GSM1827606_Input_WT_rep1.extend200.coverage.mm9.bw")
-Input_rep2 <- import.bw("D:/RTTproject/CellAnalysis/CHIPSeq/GSE71126_RAW/GSM1827607_Input_WT_rep2.extend200.coverage.mm9.bw")
+MeCP2_rep1 <- import.bw("Data/GSE71126_RAW/GSM1827604_MeCP2_ChIP_WT_rep1.extend200.coverage.mm9.bw")
+MeCP2_rep2 <- import.bw("Data/GSE71126_RAW/GSM1827605_MeCP2_ChIP_WT_rep2.extend200.coverage.mm9.bw")
+Input_rep1 <- import.bw("Data/GSE71126_RAW/GSM1827606_Input_WT_rep1.extend200.coverage.mm9.bw")
+Input_rep2 <- import.bw("Data/GSE71126_RAW/GSM1827607_Input_WT_rep2.extend200.coverage.mm9.bw")
 
 # Select chr1 - chr19
 MeCP2_rep1_fil <- MeCP2_rep1[!(seqnames(MeCP2_rep1) %in% c("chrM", "chrY", "chrX"))]
@@ -46,55 +50,16 @@ rm(Input_rep1)
 Input_rep2_fil <- Input_rep2[!(seqnames(Input_rep2) %in% c("chrM", "chrY", "chrX"))]
 rm(Input_rep2)
 
-genome = BSgenome.Mmusculus.UCSC.mm9
-si = seqinfo(genome)
-si = si[ paste0('chr', c(1:19))]
-
-binsize = 200
-bins = tileGenome(si, tilewidth=binsize,
-                  cut.last.tile.in.chrom=TRUE)
-
-
-#******************************************************************************#
-# Get promotor regions
-#******************************************************************************#
-
-#listMarts(host="https://may2012.archive.ensembl.org")
-# Get gene locations (mm9)
-mart = useMart('ENSEMBL_MART_ENSEMBL',dataset='mmusculus_gene_ensembl',
-               host="https://may2009.archive.ensembl.org")
-
-# Load genome annotations for each chromosome
-egs = getBM(attributes = c('ensembl_gene_id','external_gene_id',
-                           'chromosome_name','start_position',
-                           'end_position','strand'), 
-            filters='chromosome_name',
-            values=1:19,
-            mart=mart)
-save(egs, file = "D:/RTTproject/CellAnalysis/CHIPSeq/egs.RData")
-
-load("D:/RTTproject/CellAnalysis/CHIPSeq/egs.RData")
-# Get transcription start site
-egs$TSS = ifelse(egs$strand == "1", egs$start_position, egs$end_position)
-
-# Get promotor regions
-promoter_regions = 
-  GRanges(seqnames = Rle( paste0('chr', egs$chromosome_name) ),
-          ranges = IRanges( start = egs$TSS - 200,
-                            end = egs$TSS + 200 ),
-          strand = Rle( rep("*", nrow(egs)) ),
-          gene = egs$external_gene_id)
-promoter_regions
-
 
 #******************************************************************************#
 # MeCP2 enrichment for the GO terms
 #******************************************************************************#
 
 # Load data
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOgenes_ENSEMBL_Mm.RData")
-load("D:/RTTproject/CellAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/Genes/RTTvsIC/GOEnrichment/Data/terms_ordered1.RData")
+load("Data/egs.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Mm.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 pvalues <- rep(NA, length(terms_ordered))
 meanDiff <- rep(NA, length(terms_ordered))
@@ -109,9 +74,9 @@ for (terms in 1:length(terms_ordered)){
   egs_sel <- egs[egs$ensembl_gene_id %in% sel_genes,]
   egs_nonsel <- egs[!(egs$ensembl_gene_id %in% sel_genes),]
   
-  
-  range <- 3000
-  lo <- 60
+  # Settings
+  range <- 3000 # Range around TSS
+  lo <- 60      # length out (bin size)
   
   # Get counts around TSS of selected genes
   tiles_sel = sapply(1:nrow(egs_sel), function(i)
@@ -156,6 +121,7 @@ for (terms in 1:length(terms_ordered)){
                              ncol=lo, byrow=TRUE)
   
   
+  # Test whether the mean enrichment is different for imprinted vs non-imprinted genes
   statistics <- t.test(rowMeans(nonselLoci_matrix), rowMeans(selLoci_matrix))
   pvalues[terms] <- statistics$p.value
   meanDiff[terms] <- statistics$estimate[2] - statistics$estimate[1]
@@ -163,12 +129,14 @@ for (terms in 1:length(terms_ordered)){
   Nnonsel[terms] <- nrow(nonselLoci_matrix)
 }
 
+# Combine results into data frame for plotting
 plotDF <- data.frame(TermName = factor(terms_ordered, levels = terms_ordered),
                      Pvalue = pvalues,
                      meanDiff = meanDiff,
                      Nsel = Nsel,
                      Nnonsel = Nnonsel)
 
+# Prepare data for plotting
 plotDF <- inner_join(plotDF,GOannotation, by = c("TermName" = "Name"))
 plotDF$TermName <- factor(plotDF$TermName, levels = terms_ordered)
 plotDF <- arrange(plotDF, by = TermName)
@@ -180,6 +148,7 @@ plotDF$Group[1:6] <- "  "
 plotDF$Group[7:18] <- " "
 plotDF$Group[19:26] <- ""
 
+# Make plot
 p <- ggplot(plotDF) +
   geom_bar(aes(x = -log10(Pvalue) * sign(meanDiff), y = Description),
            stat  ="identity", position = position_dodge(), 
@@ -191,25 +160,29 @@ p <- ggplot(plotDF) +
   theme_bw()
 
 panel_colors <- c("#FEC44F","#74C476","#4292C6")
+
 # convert to grob
 gp <- ggplotGrob(p) # where p is the original ggplot object
 
-# assign the first 4 right-side facet strips with blue fill
+# assign the colors to the panels
 for(i in 1:3){
   grob.i <- grep("strip-r", gp$layout$name)[i]
   gp$grobs[[grob.i]]$grobs[[1]]$children[[1]]$gp$fill <- panel_colors[i]
 }
 grid::grid.draw(gp)
 
+# Save plot
 ggsave(gp, file = "ChIPSeq_GO.png",
        width = 6, height = 6)
 
 
 
-
+#******************************************************************************#
+# Ameboidal-type cell migration
+#******************************************************************************#
 
 #==============================================================================#
-# Plot individual GO term: ameboidal-type cell migration
+# Heatmap plot
 #==============================================================================#
 
 # Get selected and non-selected genes
@@ -218,7 +191,7 @@ sel_genes <- GOgenes[[ID]]
 egs_sel <- egs[egs$ensembl_gene_id %in% sel_genes,]
 egs_nonsel <- egs[!(egs$ensembl_gene_id %in% sel_genes),]
 
-
+# Settings
 range <- 3000
 lo <- 60
 
@@ -236,6 +209,7 @@ tiles_sel = GRanges(tilename = paste(rep(egs_sel$ensembl_gene_id, each=lo), 1:lo
                     strand = Rle(rep("*", length(as.vector(tiles_sel)))),
                     seqinfo=si)
 
+# Get bin count
 selLoci = countOverlaps(tiles_sel, MeCP2_rep1_fil) + 
   countOverlaps(tiles_sel, MeCP2_rep2_fil)
 
@@ -245,12 +219,13 @@ selLoci_matrix = matrix(selLoci, nrow=nrow(egs_sel),
 rownames(selLoci_matrix) <- egs_sel$ensembl_gene_id
 colnames(selLoci_matrix) <- seq(-1*range, range, length.out=lo)
 
+# Make data frame for plotting
 plotMatrix <- gather(as.data.frame(selLoci_matrix))
 plotMatrix$Gene <- rep(rownames(selLoci_matrix), ncol(selLoci_matrix))
 plotMatrix$key <- as.numeric(plotMatrix$key)
-
 plotMatrix$Gene <- factor(plotMatrix$Gene, levels = names(sort(rowSums(selLoci_matrix))))
 
+# Make heatmap plot
 p <- ggplot(plotMatrix) +
   geom_tile(aes(x = key, y = Gene, fill = value)) +
   scale_fill_viridis_c(option = "plasma", limits = c(0,70),
@@ -266,11 +241,14 @@ p <- ggplot(plotMatrix) +
                                   face = "bold",
                                   size = 16))
 
-
-
-ggsave(p, file = "D:/RTTproject/CellAnalysis/CHIPSeq/Heatmap_Ameboidal-type cell migration.png",
+# save plot
+ggsave(p, file = "Heatmap_Ameboidal-type cell migration.png",
        width = 6, height = 6)
 
+
+#==============================================================================#
+# Density plot
+#==============================================================================#
 
 # Get counts around TSS of non-selected genes
 tiles_nonsel = sapply(1:nrow(egs_nonsel), function(i)
@@ -286,9 +264,9 @@ tiles_nonsel = GRanges(tilename = paste(rep(egs_nonsel$ensembl_gene_id, each=lo)
                        strand = Rle(rep("*", length(as.vector(tiles_nonsel)))),
                        seqinfo=si)
 
+# Get bin counts
 nonselLoci = countOverlaps(tiles_nonsel, MeCP2_rep1_fil) + 
   countOverlaps(tiles_nonsel, MeCP2_rep2_fil)
-
 nonselLoci_matrix = matrix(nonselLoci, nrow=nrow(egs_nonsel), 
                            ncol=lo, byrow=TRUE)
 
@@ -306,8 +284,11 @@ nPerm <- 100
 plotDF_permutation  <- NULL
 set.seed(123)
 for (p in 1:nPerm){
+  
+  # Select random genes
   egs_permutation <- egs[sample(1:nrow(egs),nrow(selLoci_matrix)),]
   
+  # Get tiles around TSS
   range <- 3000
   lo <- 60
   tiles_permutation = sapply(1:nrow(egs_permutation), function(i)
@@ -323,28 +304,30 @@ for (p in 1:nPerm){
                              strand = Rle(rep("*", length(as.vector(tiles_permutation)))),
                              seqinfo=si)
   
+  # Get bin counts
   permutationLoci = countOverlaps(tiles_permutation, MeCP2_rep1_fil) + 
     countOverlaps(tiles_permutation, MeCP2_rep2_fil)
-  
   permutationLoci_matrix = matrix(permutationLoci, nrow=nrow(egs_permutation), 
                                   ncol=lo, byrow=TRUE)
   
-  
+  # Put results into dataframe
   temp <- data.frame(value = colMeans(permutationLoci_matrix),
                      location = rep(seq(-1*range, range, length.out=lo),2),
                      group = p)
   
-  
+  # Combine with results from previous permutation
   plotDF_permutation <- rbind.data.frame(plotDF_permutation,temp)
 }
 
-save(plotDF, plotDF_permutation, 
-     file = "D:/RTTproject/CellAnalysis/CHIPSeq/ChIPSeqData_Ameboidal-type cell migration.RData")
-
-
-load("D:/RTTproject/CellAnalysis/CHIPSeq/ChIPSeqData_Ameboidal-type cell migration.RData")
+# Save plotting data frames
 plotDF$group <- ifelse(plotDF$group == "Selected", "Ameboidal-type cell migration", "Other")
-# Make plot
+save(plotDF, plotDF_permutation, 
+     file = "Data/ChIPSeqData_Ameboidal-type cell migration.RData")
+
+# Load plotting data frames (if needed)
+load("Data/ChIPSeqData_Ameboidal-type cell migration.RData")
+
+# Make density plot
 colors <- c("#4292C6", "#737373")
 p <- ggplot() +
   geom_line(data = plotDF_permutation, 
@@ -365,13 +348,18 @@ p <- ggplot() +
         axis.title.y = element_text(size = 14)) +
   scale_color_manual(values = colors)
 
-
-ggsave(p, file = "D:/RTTproject/CellAnalysis/CHIPSeq/Density_Ameboidal-type cell migration.png",
+# Save plot
+ggsave(p, file = "Density_Ameboidal-type cell migration.png",
        width = 6, height = 4)
 
 
-#==============================================================================#
+
+#******************************************************************************#
 # RNA splicing, via transesterification reactions (GO:0000375)
+#******************************************************************************#
+
+#==============================================================================#
+# Heatmap plot
 #==============================================================================#
 
 # Get selected and non-selected genes
@@ -380,7 +368,7 @@ sel_genes <- GOgenes[[ID]]
 egs_sel <- egs[egs$ensembl_gene_id %in% sel_genes,]
 egs_nonsel <- egs[!(egs$ensembl_gene_id %in% sel_genes),]
 
-
+# Settings
 range <- 3000
 lo <- 60
 
@@ -398,6 +386,7 @@ tiles_sel = GRanges(tilename = paste(rep(egs_sel$ensembl_gene_id, each=lo), 1:lo
                     strand = Rle(rep("*", length(as.vector(tiles_sel)))),
                     seqinfo=si)
 
+# Get bin counts
 selLoci = countOverlaps(tiles_sel, MeCP2_rep1_fil) + 
   countOverlaps(tiles_sel, MeCP2_rep2_fil)
 
@@ -407,12 +396,13 @@ selLoci_matrix = matrix(selLoci, nrow=nrow(egs_sel),
 rownames(selLoci_matrix) <- egs_sel$ensembl_gene_id
 colnames(selLoci_matrix) <- seq(-1*range, range, length.out=lo)
 
+# Make data frame for plotting
 plotMatrix <- gather(as.data.frame(selLoci_matrix))
 plotMatrix$Gene <- rep(rownames(selLoci_matrix), ncol(selLoci_matrix))
 plotMatrix$key <- as.numeric(plotMatrix$key)
-
 plotMatrix$Gene <- factor(plotMatrix$Gene, levels = names(sort(rowSums(selLoci_matrix))))
 
+# Make heatmap plot
 p <- ggplot(plotMatrix) +
   geom_tile(aes(x = key, y = Gene, fill = value)) +
   scale_fill_viridis_c(option = "plasma", limits = c(0,70),
@@ -428,11 +418,14 @@ p <- ggplot(plotMatrix) +
                                   face = "bold",
                                   size = 16))
 
-
-
-ggsave(p, file = "D:/RTTproject/CellAnalysis/CHIPSeq/Heatmap_RNA splicing.png",
+# Save plot
+ggsave(p, file = "Heatmap_RNA splicing.png",
        width = 6, height = 6)
 
+
+#==============================================================================#
+# Density plot
+#==============================================================================#
 
 # Get counts around TSS of non-selected genes
 tiles_nonsel = sapply(1:nrow(egs_nonsel), function(i)
@@ -448,14 +441,14 @@ tiles_nonsel = GRanges(tilename = paste(rep(egs_nonsel$ensembl_gene_id, each=lo)
                        strand = Rle(rep("*", length(as.vector(tiles_nonsel)))),
                        seqinfo=si)
 
+# Get bin counts
 nonselLoci = countOverlaps(tiles_nonsel, MeCP2_rep1_fil) + 
   countOverlaps(tiles_nonsel, MeCP2_rep2_fil)
 
 nonselLoci_matrix = matrix(nonselLoci, nrow=nrow(egs_nonsel), 
                            ncol=lo, byrow=TRUE)
 
-
-# prepare data for plot
+# prepare data for plotting
 plotDF <- data.frame(value = c(colMeans(selLoci_matrix),
                                colMeans(nonselLoci_matrix)),
                      location = rep(seq(-1*range, range, length.out=lo),2),
@@ -470,6 +463,7 @@ set.seed(123)
 for (p in 1:nPerm){
   egs_permutation <- egs[sample(1:nrow(egs),nrow(selLoci_matrix)),]
   
+  # Get tiles around TSS
   range <- 3000
   lo <- 60
   tiles_permutation = sapply(1:nrow(egs_permutation), function(i)
@@ -485,27 +479,30 @@ for (p in 1:nPerm){
                              strand = Rle(rep("*", length(as.vector(tiles_permutation)))),
                              seqinfo=si)
   
+  # Get bin counts
   permutationLoci = countOverlaps(tiles_permutation, MeCP2_rep1_fil) + 
     countOverlaps(tiles_permutation, MeCP2_rep2_fil)
   
   permutationLoci_matrix = matrix(permutationLoci, nrow=nrow(egs_permutation), 
                                   ncol=lo, byrow=TRUE)
   
-  
+  # Put results into data frame
   temp <- data.frame(value = colMeans(permutationLoci_matrix),
                      location = rep(seq(-1*range, range, length.out=lo),2),
                      group = p)
   
-  
+  # Combine with the results from previous permutation
   plotDF_permutation <- rbind.data.frame(plotDF_permutation,temp)
 }
 
+# Save plotting data frames
+plotDF$group <- ifelse(plotDF$group == "Selected", "RNA splicing, via transesterification reactions", "Other")
 save(plotDF, plotDF_permutation, 
-     file = "D:/RTTproject/CellAnalysis/CHIPSeq/ChIPSeqData_RNA splicing.RData")
+     file = "Data/ChIPSeqData_RNA splicing.RData")
 
+# Load plotting data frames (if needed)
+load("Data/ChIPSeqData_RNA splicing.RData")
 
-load("D:/RTTproject/CellAnalysis/CHIPSeq/ChIPSeqData_RNA splicing.RData")
-#plotDF$group <- ifelse(plotDF$group == "Selected", "RNA splicing, via transesterification reactions", "Other")
 # Make plot
 colors <- rev(c("#EF3B2C", "#737373"))
 p <- ggplot() +
@@ -527,13 +524,6 @@ p <- ggplot() +
         axis.title.y = element_text(size = 14)) +
   scale_color_manual(values = colors)
 
-ggsave(p, file = "D:/RTTproject/CellAnalysis/CHIPSeq/Density_RNA splicing.png",
+# Save plot
+ggsave(p, file = "Density_RNA splicing.png",
        width = 6, height = 4)
-
-
-
-
-
-
-
-

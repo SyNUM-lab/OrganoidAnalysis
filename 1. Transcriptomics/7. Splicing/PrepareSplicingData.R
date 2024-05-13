@@ -9,7 +9,8 @@ library(data.table)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/7. Splicing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/7. Splicing"))
 
 # Data directory (contains RSEM output)
 data_dir <- paste0("D:/RTTproject/GeneticFiles/RSEM/a_Part", 1:7)

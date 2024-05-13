@@ -20,22 +20,23 @@ firstup <- function(x) {
 }
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/5. GSEA"))
 
 # Load necessary data
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir, "/GO_annotation/GOannotation.RData"))
 
 load("Data/terms_ordered1.RData")
 load("Data/GOresults_GSEA_gx1.RData")
 load("Data/GOresults_NES_GSEA_gx1.RData")
 load("Data/reducedTerms_RTTvsIC_BP1.RData")
 
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 genes_all <- rownames(topList[[1]])
 
 # Get p-values

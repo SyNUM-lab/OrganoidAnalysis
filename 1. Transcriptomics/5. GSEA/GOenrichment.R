@@ -20,14 +20,15 @@ firstup <- function(x) {
 }
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/5. GSEA"))
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 
 genes_all <- rownames(topList[[1]])
 
@@ -118,8 +119,8 @@ GOresults_adj <- apply(GOresults[,2:8],2,function(x){p.adjust(x, method = "fdr")
 rownames(GOresults_adj) <- GOresults$Name
 
 # Load GO annotation data
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
 
 # Get GO terms
 rownames(GOannotation) <- GOannotation$Name
@@ -331,8 +332,8 @@ plotExpr <- plotExpr %>%
   mutate(stExpr = (meanExpr - mean(meanExpr))/sd(meanExpr))
 
 # Load GO annotation data
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
 
 # Select GO term
 termID <- "GO:0097192"
@@ -437,13 +438,13 @@ ggsave(finalPlot, file = paste0("Plots/",termName,"_expr.png"), width = 10, heig
 
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
 
 # Get selected GO terms
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]

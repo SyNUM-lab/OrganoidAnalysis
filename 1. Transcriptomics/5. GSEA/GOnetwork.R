@@ -18,17 +18,18 @@ firstup <- function(x) {
 JI <- function(x,y){length(intersect(x,y))/length(union(x,y))}
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/5. GSEA"))
 
 # Load necessary data
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir, "/GO_annotation/GOannotation.RData"))
 load("Data/terms_ordered1.RData")
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 
 # Calculate pairwise Jaccard Index of selected GO terms
 GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]

@@ -139,8 +139,9 @@ p <- ggplot(plotDF) +
   scale_color_manual(values = colors)
 
 panel_colors <- c("#FBB4AE","#B3CDE3","#CCEBC5","#DECBE4","#FED9A6","#FFFFCC")
+
 # convert to grob
-gp <- ggplotGrob(p) # where p is the original ggplot object
+gp <- ggplotGrob(p)
 for(i in 1:6){
   grob.i <- grep("strip-t", gp$layout$name)[i]
   gp$grobs[[grob.i]]$grobs[[1]]$children[[1]]$gp$fill <- panel_colors[i]

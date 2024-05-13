@@ -16,8 +16,8 @@ firstup <- function(x) {
 }
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/6. Regulators")
-
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/6. Regulators"))
 
 #==============================================================================#
 # Perform network construction using GENIE3
@@ -28,7 +28,7 @@ setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/6. Regulat
 #..............................................................................#
 
 # Load protein expression data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/2. Proteomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"pxData_imp.RData"))
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
 load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
@@ -46,7 +46,7 @@ pxMatrix_fil <- pxMatrix_imp[rownames(pxMatrix_imp) %in% proteinAnnotation$ID[pr
 #..............................................................................#
 
 # Load lncRNA expression data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 load(paste0(preprocessing_dir,"Gene_biotype.RData"))
@@ -129,26 +129,27 @@ firstup <- function(x) {
   x
 }
 
+# Set working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/6. Regulators"))
 
 # Weight matrix
 load("Data/weightMat_lncRNA_TF.RData")
 
 # Protein annotation data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/2. Proteomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
 proteinAnnotation <- annotations
 
 # Gene annotation data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 
 # GO annotation data
-load(paste0("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/",
-            "GOannotation.RData"))
+load(paste0(homeDir, "/GO_annotation/GOannotation.RData"))
 
 # Selected GO terms
-load(paste0("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/",
-            "terms_ordered1.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 
 # Get regulatory interactions
@@ -225,7 +226,7 @@ colors <- c(RColorBrewer::brewer.pal(n = 6, "Blues"),
 names(colors) <- order
 
 # Load proteomics statistics
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/2. Proteomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"DEresults_px.RData"))
 
 # Get p-values
@@ -245,7 +246,7 @@ rownames(logFCs_px) <- DEresults_px$name
 values_px <- -log10(pvalues_px)*sign(logFCs_px)
 
 # Load transcriptomics statistics
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 genes_all <- rownames(topList[[1]])
 

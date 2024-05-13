@@ -15,26 +15,27 @@ firstup <- function(x) {
 }
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/6. Regulators")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/6. Regulators"))
 
 # Load data:
 
 # GO terms
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # GO annotation
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
 
 # Gene annotation
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 
 # Expression matrix
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 
 # Sample info
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
 
 

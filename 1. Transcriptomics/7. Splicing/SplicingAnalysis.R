@@ -69,6 +69,7 @@ p <- ggplot(plotPCA, aes(x = PC1, y = PC2, color = Colour, shape = Tissue)) +
                                        linetype = 1))
 
 
+# Save plot
 ggsave(filename = "PCA_Scores_IsoPct.png", p, width = 7, height = 5)
 
 
@@ -151,6 +152,8 @@ load("DASResults.RData")
 sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) > 3)]
 t <- table(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel]) > 1
 DASgenes <- names(t)[t]
+
+# Save DAS genes
 save(DASgenes, file = "Data/DASgenes.RData")
 
 

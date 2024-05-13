@@ -12,7 +12,7 @@ dataDir <- "D:/RTTproject/GeneticFiles/RSEM/a_Part"
 
 # Working directory
 homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
-setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/"))
+setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing"))
 
 # Get raw gene expression values:
 for (i in 1:7){

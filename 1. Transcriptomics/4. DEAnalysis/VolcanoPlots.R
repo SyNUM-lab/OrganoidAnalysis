@@ -19,14 +19,16 @@ firstup <- function(x) {
   x
 }
 
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/4. DEAnalysis")
+# Working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics//4. DEAnalysis"))
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 
 genes_all <- rownames(topList[[1]])
 

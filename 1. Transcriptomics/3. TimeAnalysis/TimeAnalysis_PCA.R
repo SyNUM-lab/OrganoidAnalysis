@@ -9,7 +9,8 @@ cat("\014")
 gc()
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/3. TimeAnalysis")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/3. TimeAnalysis"))
 
 # Load packages
 library(tidyverse)
@@ -27,10 +28,10 @@ firstup <- function(x) {
 }
 
 # Load data:
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 all(sampleInfo$SampleID == colnames(gxMatrix_norm))
 
 #*****************************************************************************#

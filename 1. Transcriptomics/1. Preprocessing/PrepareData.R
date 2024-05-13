@@ -7,14 +7,18 @@ library(tidyverse)
 library(data.table)
 library(biomaRt)
 
-data_dir <- "D:/RTTproject/GeneticFiles/RSEM/a_Part"
-work_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+# Directory with RSEM output
+dataDir <- "D:/RTTproject/GeneticFiles/RSEM/a_Part"
+
+# Working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/"))
 
 # Get raw gene expression values:
 for (i in 1:7){
   
   # Get gene expression files
-  files <- list.files(path = paste0(data_dir,i), pattern = ".genes.results")
+  files <- list.files(path = paste0(dataDir,i), pattern = ".genes.results")
   
   # Get sample names
   sampleNames <- str_remove(files, "_Clean_Data_unaligned.genes.results")
@@ -22,7 +26,7 @@ for (i in 1:7){
   for (j in 1:length(files)){
     
     # Read gene expression file
-    GeneExpr <- fread(paste0(data_dir,i,"/",files[j]))
+    GeneExpr <- fread(paste0(dataDir,i,"/",files[j]))
     print(paste0(i,",",j,": ", nrow(GeneExpr)))
     
     # Retrieve expression value from file
@@ -45,12 +49,12 @@ gxMatrix_raw <- as.matrix(GeneExpr_all[,-1])
 rownames(gxMatrix_raw) <- GeneExpr_all$gene_id
 
 # Save expression matrix
-save(gxMatrix_raw, file = paste0(work_dir,"gxMatrix_raw1.RData"))
+save(gxMatrix_raw, file = "gxMatrix_raw1.RData")
 
 # Make gene annotation file:
 
 # Read gene expression file
-GeneExpr <- fread(paste0(data_dir,i,"/",files[j]))
+GeneExpr <- fread(paste0(dataDir,i,"/",files[j]))
 
 # Retrieve relevant columns
 geneAnnotation <- GeneExpr[,c("gene_id", "transcript_id(s)", "length", "effective_length")]
@@ -75,6 +79,6 @@ annotations <- getBM(attributes=c("ensembl_gene_id",
 geneAnnotation <- inner_join(geneAnnotation, annotations, by = c("EnsemblID" = "ensembl_gene_id"))
 
 # Save file
-save(geneAnnotation, file = paste0(work_dir,"geneAnnotation.RData"))
+save(geneAnnotation, file = "geneAnnotation.RData")
 
 

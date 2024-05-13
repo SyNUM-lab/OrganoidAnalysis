@@ -7,7 +7,8 @@ gc()
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/"))
 
 # Load data
 load("geneAnnotation.RData")

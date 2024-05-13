@@ -9,7 +9,8 @@ library(edgeR)
 library(patchwork)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/"))
 
 #*****************************************************************************#
 # Normalization
@@ -18,7 +19,7 @@ setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preproc
 # Load data
 load("gxMatrix_raw1.RData")                                           # Raw count data
 load("geneAnnotation.RData")                                          # Gene annotation data
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")  # SampleInfo
+load(paste0(homeDir, "/sampleInfo.RData"))                            # Sample Information
 all(sampleInfo$SampleID == colnames(gxMatrix_raw))
 
 # Remove sex chromosomal genes

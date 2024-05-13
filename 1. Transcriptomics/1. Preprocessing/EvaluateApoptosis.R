@@ -3,12 +3,13 @@ rm(list = ls())
 cat("\014") 
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/"))
 
 # Load data
 load("gxMatrix_norm.RData")
 load("geneAnnotation.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/SampleInfo.RData")
+load(paste0(homeDir,"/SampleInfo.RData"))
 load("DEresults_Time_gx.RData")
 
 # Load packages

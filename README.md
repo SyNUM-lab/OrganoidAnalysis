@@ -2,23 +2,23 @@
 ![status](https://badgen.net/badge/Status/Complete/green)
 
 <h1 align="center">
-Characterizing the multi-omics landscape of
+Characterizing the Multi-Omics Landscape of
    <br>
-developing Rett Syndrome brain organoids
+Developing Rett Syndrome Brain Organoids
 </h1>
 
 <p align="center">
-<a href="https://github.com/jarnokoetsier/DementiaRiskPrediction/blob/main/README.md#Background">Background</a>
+<a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#background">Background</a>
      ·
-<a href="https://github.com/jarnokoetsier/DementiaRiskPrediction/blob/main/README.md#Our Study">Our Study</a>
+<a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#our-study">Our Study</a>
      ·
-<a href="https://github.com/jarnokoetsier/DementiaRiskPrediction/blob/main/README.md#Software">Software</a>
+<a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#software">Software</a>
      ·
-<a href="https://github.com/jarnokoetsier/DementiaRiskPrediction/blob/main/README.md#Contact">Contact</a>
+<a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#contact">Contact</a>
 </p>
 
 <p align="center">
-This repository contains the scripts used for the project <i>"Characterizing the multi-omics landscape of developing Rett Syndrome brain organoids"</i>.
+This repository contains the scripts used for the project <i>"Characterizing the Multi-Omics Landscape of Developing Rett Syndrome Brain Organoids"</i>.
 </p>
 <br>
 

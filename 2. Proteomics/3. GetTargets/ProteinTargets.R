@@ -12,15 +12,16 @@ library(patchwork)
 library(grid)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/3. GetTargets")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/3. GetTargets"))
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/2. Proteomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"pxData_imp.RData"))
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
 load(paste0(preprocessing_dir,"DEresults_px.RData"))
 load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
+load(paste0(homeDir,"/sampleInfo.RData"))
 
 # Get p-values
 pvalues <- DEresults_px[,3:9]
@@ -269,7 +270,7 @@ ggsave(legend, file = "legend_RTTvsIC_ProteinTargets.png", width = 8, height = 8
 
 # Load data
 load("proteinSelection.RData")
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))
 genes_all <- rownames(topList[[1]])
 
@@ -289,7 +290,7 @@ rownames(logFCs_gx) <- genes_all
 colnames(logFCs_gx) <- names(topList)
 
 # Get genes that corresponding to selected proteins
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/px_gx_annotations1.RData")
+load(paste0(homeDir,"/2. Proteomics/1. Preprocessing/px_gx_annotations1.RData"))
 px_gx_annotations <- unique(px_gx_annotations[,c("gene_id", "ID")])
 selection_gx <- inner_join(selection, px_gx_annotations, by = c("ID" = "ID"))
 

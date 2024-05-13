@@ -11,8 +11,11 @@ library(DEP)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/1. Preprocessing"))
+
+# Load sample information
+load(paste0(homeDir,"/sampleInfo.RData"))
 
 # Read proteomics data
 pxData_raw <- read.delim("D:/RTTproject/OriginalData/Proteomics/DEP analysis/Result files/20210310_Cell__total_scaling_raw.txt",

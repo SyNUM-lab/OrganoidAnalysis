@@ -14,8 +14,11 @@ library(org.Hs.eg.db)
 library(rrvgo)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/1. Preprocessing"))
+
+# Load sample information
+load(paste0(homeDir,"/sampleInfo.RData"))
 
 # Load data
 load("pxData_imp.RData")

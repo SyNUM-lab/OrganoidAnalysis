@@ -15,8 +15,11 @@ library(rrvgo)
 library(ggrepel)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/1. Preprocessing"))
+
+# Load sample information
+load(paste0(homeDir,"/sampleInfo.RData"))
 
 #******************************************************************************#
 # Collect proteomics data
@@ -62,7 +65,7 @@ colnames(logFCs_px) <- c("Cell_D0",
 #******************************************************************************#
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 load(paste0(preprocessing_dir,"DEresults_RTTvsIC_gx.RData"))

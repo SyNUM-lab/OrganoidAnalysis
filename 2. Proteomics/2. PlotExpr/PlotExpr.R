@@ -11,15 +11,16 @@ library(ggpubr)
 library(biomaRt)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/2. PlotExpr")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/2. PlotExpr"))
 
 # Load data
-preprocessing_dir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/1. Preprocessing/"
+preprocessing_dir <- paste0(homeDir, "/2. Proteomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"pxData_imp.RData"))
 pxMatrix_imp <- pxData_imp@assays@data@listData[[1]]
 load(paste0(preprocessing_dir,"DEresults_px.RData"))
 load(paste0(preprocessing_dir,"proteinAnnotation.RData"))
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/sampleInfo.RData")
+load(paste0(homeDir,"/sampleInfo.RData"))
 
 # Get p-values
 pvalues <- DEresults_px[,3:9]
@@ -129,7 +130,7 @@ finalPlot <- ggarrange(mainPlot,
 finalPlot
 
 # Save plot
-ggsave(finalPlot, file = "D:/RTTproject/CellAnalysis/Proteins/RTTvsIC/Plots/LY6H.png", width = 7, height = 4)
+ggsave(finalPlot, file = "LY6H.png", width = 7, height = 4)
 
 
 

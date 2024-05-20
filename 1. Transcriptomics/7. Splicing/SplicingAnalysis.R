@@ -148,14 +148,13 @@ save(pvalue,diff,file = "Data/DASResults.RData")
 
 # Get genes that are differentially alternative spliced:
 # genes with transcripts with a P <= 0.1 in more than three time points/regions
-load("DASResults.RData")
+load("Data/DASResults.RData")
 sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) > 3)]
 t <- table(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel]) > 1
 DASgenes <- names(t)[t]
 
 # Save DAS genes
 save(DASgenes, file = "Data/DASgenes.RData")
-
 
 #==============================================================================#
 # Make plots

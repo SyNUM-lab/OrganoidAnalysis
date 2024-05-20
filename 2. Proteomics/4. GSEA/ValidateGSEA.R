@@ -15,7 +15,8 @@ library(org.Hs.eg.db)
 library(rrvgo)
 
 # Set working directory
-setwd("D:/RTTproject/CellAnalysis/OrganoidAnalysis/2. Proteomics/4. GSEA")
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/2. Proteomics/4. GSEA"))
 
 # Capitalize first letter
 firstup <- function(x) {
@@ -26,10 +27,10 @@ firstup <- function(x) {
 # Load data
 load("GOresults_GSEA.RData")
 load("GOresults_NES_GSEA.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOannotation.RData")
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/GO_annotation/GOgenes_BP_UNIPROT_Hs.RData")
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_UNIPROT_Hs.RData"))
 rownames(GOannotation) <- GOannotation$Name
-load("D:/RTTproject/CellAnalysis/OrganoidAnalysis/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData")
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
 
 # Set column names of GO results
 colnames(GOresults) <- c("Name", "Cell_D0", "Dorsal_D13", "Dorsal_D40", 

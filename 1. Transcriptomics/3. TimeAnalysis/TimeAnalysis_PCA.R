@@ -28,7 +28,7 @@ firstup <- function(x) {
 }
 
 # Load data:
-preprocessing_dir <- paste0(homeDir,"1. Transcriptomics/1. Preprocessing/")
+preprocessing_dir <- paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/")
 load(paste0(preprocessing_dir,"gxMatrix_norm.RData"))
 load(paste0(preprocessing_dir,"geneAnnotation.RData"))
 load(paste0(homeDir,"/SampleInfo.RData"))
@@ -229,6 +229,6 @@ p <- ggplot() +
         axis.ticks = element_blank())
 
 # Save plot
-ggsave(p, file = "TimeAnalysis_PCA.png", width = 9, height = 5)
+ggsave(p, file = "TimeAnalysis_PCA1.png", width = 9, height = 5)
 
 

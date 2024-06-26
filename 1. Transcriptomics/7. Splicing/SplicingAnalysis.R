@@ -195,7 +195,7 @@ IsoPctMatrix <- IsoPctMatrix[,samples]
 sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
 
 # Select gene
-gene <- "ENSG00000092964_DPYSL2" 
+gene <- "ENSG00000274512_TBC1D3L"
 transcripts <- txAnnotation$transcript_id[txAnnotation$gene_id == gene]
 geneExpr <- 2^gxMatrix_norm[gene,]-1
 IsoPct <- IsoPctMatrix[transcripts,]/100
@@ -319,3 +319,79 @@ p_all
 
 # Save plot
 ggsave(p_all, file = "DPYSL2_splicing.png", width = 8, height = 7)
+
+
+#==============================================================================#
+# Assess DE
+#==============================================================================#
+
+# Clear workspace and console
+rm(list = ls())
+cat("\014") 
+gc()
+
+# Load packages
+library(tidyverse)
+library(data.table)
+library(biomaRt)
+library(edgeR)
+library(patchwork)
+library(scales)
+
+# Set working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/7. Splicing"))
+
+# Load data
+load("Data/IsoPctMatrix.RData")
+load("Data/txMatrix_raw.RData")
+load("Data/txAnnotation.RData")
+load("Data/DASgenes.RData")
+load(paste0(homeDir,"/sampleInfo.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/gxMatrix_norm.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/geneAnnotation.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/DEresults_RTTvsIC_gx.RData"))
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+
+# Put samples in correct order
+samples <- sampleInfo$SampleID
+gxMatrix_norm <- gxMatrix_norm[,samples]
+IsoPctMatrix <- IsoPctMatrix[,samples]
+sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
+
+
+# Get p-values
+genes_all <- rownames(topList[[1]])
+pvalues <- matrix(unlist(lapply(topList, function(x){x[genes_all,"PValue"]})), ncol = length(topList))
+rownames(pvalues) <- genes_all
+colnames(pvalues) <- names(topList)
+
+# get adjusted p-values
+adj_pvalues <- matrix(unlist(lapply(topList, function(x){x[genes_all,"FDR"]})), ncol = length(topList))
+rownames(adj_pvalues) <- genes_all
+colnames(adj_pvalues) <- names(topList)
+
+# Get logFCs
+logFCs <- matrix(unlist(lapply(topList, function(x){x[genes_all,"logFC"]})), ncol = length(topList))
+rownames(logFCs) <- genes_all
+colnames(logFCs) <- names(topList)
+
+
+sigGenes <- rownames(adj_pvalues)[rowSums(adj_pvalues < 0.05) >= 4]
+sigDASGenes <- intersect(sigGenes, DASgenes)
+
+
+load("Data/DASResults.RData")
+sel <- rownames(pvalue)[which(rowSums(pvalue <= 0.1) >= 5)]
+t <- table(txAnnotation$gene_id[txAnnotation$transcript_id %in% sel]) > 1
+DASgenes <- names(t)[t]
+sigGenes <- rownames(adj_pvalues)[rowSums(adj_pvalues < 0.05) >= 5]
+sigDASGenes <- intersect(sigGenes, DASgenes)
+
+
+sigDASGenes
+
+"ENSG00000198825_INPP5F"  "ENSG00000163682_RPL9"    "ENSG00000250337_PURPL"  
+[4] "ENSG00000198453_ZNF568"  "ENSG00000290376_HERC2P3" "ENSG00000274512_TBC1D3L"
+[7] "ENSG00000106484_MEST"   

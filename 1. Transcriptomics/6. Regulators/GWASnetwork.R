@@ -14,6 +14,12 @@ library(tidyverse)
 library(RCy3)
 library(igraph)
 
+# FUNCTION: Capitalize first letter
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
 # Read GWAS files
 GWASdata <- NULL
 for (file in list.files("GWAS", full.names = TRUE)){
@@ -28,7 +34,7 @@ for (file in list.files("GWAS", full.names = TRUE)){
 write.csv(GWASdata, file = "Data/GWASdata.csv")
 
 # Add categories manual
-plotDF <- fread("GWASdata.csv")
+plotDF <- fread("Data/GWASdata.csv")
 plotDF <- plotDF[plotDF$Category != "Other",]
 plotDF <- plotDF %>%
   group_by(Gene,efoTraits_abbreviated) %>%
@@ -40,7 +46,7 @@ plotDF <- plotDF %>%
 plotDF <- unique(plotDF)
 plotDF <- plotDF[plotDF$Category != "Anthropometry",]
 plotDF <- plotDF[plotDF$Gene != "BASP1-AS1",]
-
+plotDF$efoTraits_abbreviated <- firstup(plotDF$efoTraits_abbreviated)
 
 # Make graph:
 
@@ -58,7 +64,7 @@ g <- graph_from_data_frame(edges, directed=TRUE, vertices=nodes)
 # 4) export graph to cytoscape
 createNetworkFromIgraph(
   g,
-  title = "GWASnetwork2",
+  title = "GWASnetwork3",
   collection = "GWAS"
 )
 

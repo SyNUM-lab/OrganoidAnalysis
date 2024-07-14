@@ -195,7 +195,7 @@ IsoPctMatrix <- IsoPctMatrix[,samples]
 sampleInfo$Tissue[sampleInfo$Tissue == "Cell"] <- "iPSC"
 
 # Select gene
-gene <- "ENSG00000274512_TBC1D3L"
+gene <- "ENSG00000106462_EZH2"
 transcripts <- txAnnotation$transcript_id[txAnnotation$gene_id == gene]
 geneExpr <- 2^gxMatrix_norm[gene,]-1
 IsoPct <- IsoPctMatrix[transcripts,]/100

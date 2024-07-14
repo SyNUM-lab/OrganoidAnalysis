@@ -113,6 +113,33 @@ imprintedLoci_matrix = matrix(imprintedLoci, nrow=nrow(egs_imprinted),
                            ncol=lo, byrow=TRUE)
 
 
+# Set tiles around TSS of non-imprinted genes
+tiles_nonimprinted = sapply(1:nrow(egs_nonimprinted), function(i)
+  if(egs_nonimprinted$strand[i] == "1" )
+    egs_nonimprinted$TSS[i] + seq(-1*range, range-100, length.out=lo)
+  else
+    egs_nonimprinted$TSS[i] + seq(range-100, -1*range, length.out=lo))
+
+tiles_nonimprinted = GRanges(tilename = paste(rep(egs_nonimprinted$ensembl_gene_id, each=lo), 1:lo, sep="_"),
+                          seqnames = Rle(rep(paste0('chr', egs_nonimprinted$chromosome_name), each=lo)), 
+                          ranges = IRanges(start = as.vector(tiles_nonimprinted),
+                                           width = 100),
+                          strand = Rle(rep("*", length(as.vector(tiles_nonimprinted)))),
+                          seqinfo=si)
+
+# Get bin counts
+nonimprintedLoci = countOverlaps(tiles_nonimprinted, MeCP2_rep1_fil) + 
+  countOverlaps(tiles_nonimprinted, MeCP2_rep2_fil)
+
+nonimprintedLoci_matrix = matrix(nonimprintedLoci, nrow=nrow(egs_nonimprinted), 
+                              ncol=lo, byrow=TRUE)
+
+statistics <- t.test(rowMeans(nonimprintedLoci_matrix), rowMeans(imprintedLoci_matrix))
+statistics$p.value
+statistics$estimate[2] - statistics$estimate[1]
+
+
+
 #==============================================================================#
 # 2) Get bin counts around TSS of non-imprinted genes
 #==============================================================================#

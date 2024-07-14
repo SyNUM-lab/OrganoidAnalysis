@@ -121,7 +121,7 @@ for (terms in 1:length(terms_ordered)){
                              ncol=lo, byrow=TRUE)
   
   
-  # Test whether the mean enrichment is different for imprinted vs non-imprinted genes
+  # Test whether the mean enrichment is more than expected by chance
   statistics <- t.test(rowMeans(nonselLoci_matrix), rowMeans(selLoci_matrix))
   pvalues[terms] <- statistics$p.value
   meanDiff[terms] <- statistics$estimate[2] - statistics$estimate[1]

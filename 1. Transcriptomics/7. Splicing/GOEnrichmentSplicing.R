@@ -96,3 +96,77 @@ grid::grid.draw(gp)
 # Save plot
 ggsave(gp, file = "GOenrichment_splicing.png",
        width = 6, height = 6)
+
+#==============================================================================#
+# Perform permutation
+#==============================================================================#
+
+# Clear workspace and console
+rm(list = ls())
+cat("\014") 
+gc()
+
+# Load packages
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(tidyverse)
+
+# Capitalize first letter
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
+# Set working directory
+homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
+setwd(paste0(homeDir,"/1. Transcriptomics/7. Splicing"))
+
+# Load DAS genes
+load("Data/DASgenes.RData")
+load(paste0(homeDir,"/1. Transcriptomics/1. Preprocessing/gxMatrix_raw1.RData"))
+
+# Load GO annotation
+load(paste0(homeDir,"/GO_annotation/GOannotation.RData"))
+load(paste0(homeDir,"/GO_annotation/GOgenes_BP_ENSEMBL_Hs.RData"))
+load(paste0(homeDir,"/1. Transcriptomics/5. GSEA/Data/terms_ordered1.RData"))
+
+# Prepare TERM2GENE and TERM2NAME objects
+GOgenes_fil <- GOgenes[GOannotation$ID[GOannotation$Name %in% terms_ordered]]
+TERM2GENE <- data.frame(TERM = unlist(lapply(seq_along(GOgenes_fil), function(x){rep(names(GOgenes_fil)[x],length(GOgenes_fil[[x]]))})),
+                        GENE = unlist(GOgenes_fil))
+
+TERM2NAME <- GOannotation[GOannotation$Name %in% terms_ordered, c(2,3)]
+colnames(TERM2NAME) <- c("TERM", "NAME")
+
+# Perform permutation
+nPerm <- 1000
+all_genes <- rownames(gxMatrix_raw)
+nGenes <- length(DASgenes)
+permResults <- rep(NA, nPerm)
+set.seed(123)
+for (p in 1:nPerm){
+  
+  permGenes <- all_genes[sample(1:length(all_genes),nGenes)]
+  gene <- unlist(lapply(str_split(permGenes, "_"), function(x)x[[1]]))
+  universe <- unlist(lapply(str_split(all_genes, "_"), function(x)x[[1]]))
+  
+  GOtest <- enricher(
+    gene = gene,
+    pvalueCutoff = Inf,
+    pAdjustMethod = "fdr",
+    universe = universe,
+    qvalueCutoff = Inf,
+    minGSSize = 0,
+    maxGSSize = Inf,
+    TERM2GENE = TERM2GENE,
+    TERM2NAME = TERM2NAME,
+  )
+  
+  GOresults <- GOtest@result
+  permResults[p] <- sum(GOresults$pvalue < 0.05)
+}
+
+hist(permResults)
+sum(permResults >= 15)
+
+

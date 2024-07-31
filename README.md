@@ -2,15 +2,17 @@
 ![status](https://badgen.net/badge/Status/Complete/green)
 
 <h1 align="center">
-Characterizing the Multi-Omics Landscape of
+Multi-Omics Characterization of Developing Forebrain Organoids
    <br>
-Developing Rett Syndrome Brain Organoids
+Unravels the Dynamic Molecular Events of Rett Syndrome Pathogenesis
 </h1>
 
 <p align="center">
 <a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#background">Background</a>
-     ·
+Although MECP2 mutations are a well-known cause of Rett Syndrome, the molecular events contributing to its pathogenesis are still not fully elucidated. 
+     .
 <a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#our-study">Our Study</a>
+We analyzed the spatiotemporal gene and protein expression patterns in MeCP2-mutant (RTT) and isogenic control (IC) forebrain organoids. HiPSC-derived dorsal and ventral forebrain organoids were cultured and transcriptomics and proteomics profiles were characterized at days 0, 13, 40, and 75. 
      ·
 <a href="https://github.com/jarnokoetsier/OrganoidAnalysis/blob/main/README.md#software">Software</a>
      ·
@@ -18,7 +20,7 @@ Developing Rett Syndrome Brain Organoids
 </p>
 
 <p align="center">
-This repository contains the scripts used for the project <i>"Characterizing the Multi-Omics Landscape of Developing Rett Syndrome Brain Organoids"</i>.
+This repository contains the scripts used for the project <i>"Multi-Omics Characterization of Developing Forebrain Organoids Unravels the Dynamic Molecular Events of Rett Syndrome Pathogenesis"</i>.
 </p>
 <br>
 

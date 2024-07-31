@@ -16,17 +16,16 @@ Multi-Omics Characterization of Developing Forebrain Organoids Unravels the Dyna
 </p>
 
 <p align="center">
-This repository contains the scripts used for the project <i>"Multi-Omics Characterization of Developing Forebrain Organoids Unravels the Dynamic Molecular Events of Rett Syndrome Pathogenesis"</i>.
+This repository contains the scripts of the project <i>"Multi-Omics Characterization of Developing Forebrain Organoids Unravels the Dynamic Molecular Events of Rett Syndrome Pathogenesis"</i>.
 </p>
 <br>
 
 ## Background
-Although MECP2 mutations are a well-known cause of Rett Syndrome, the molecular events contributing to its pathogenesis are still not fully elucidated. 
+Although *MECP2* mutations are a well-known cause of Rett Syndrome (RTT), the molecular events contributing to its pathogenesis are still not fully elucidated. 
 ## Our Study
 We analyzed the spatiotemporal gene and protein expression patterns in MeCP2-mutant (RTT) and isogenic control (IC) forebrain organoids. HiPSC-derived dorsal and ventral forebrain organoids were cultured and transcriptomics and proteomics profiles were characterized at days 0, 13, 40, and 75. 
 ## Software
 * `R version 4.3.1.`
 * `RStudio version 2024.04.0+735`
-
 ## Contact
-Feel free to contact me via email: jarno.koetsier@maastrichtuniversity.nl
+Feel free to contact us via email: jarno.koetsier@maastrichtuniversity.nl

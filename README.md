@@ -2,9 +2,13 @@
 ![status](https://badgen.net/badge/Status/Complete/green)
 
 <h1 align="center">
-Multi-Omics Characterization of Developing Forebrain Organoids
+Multi-Omics Characterization
    <br>
-Unravels the Dynamic Molecular Events of Rett Syndrome Pathogenesis
+ of Developing Forebrain Organoids
+   <br>
+Unravels the Dynamic Molecular Events 
+    <br>
+   of Rett Syndrome Pathogenesis
 </h1>
 
 <p align="center">

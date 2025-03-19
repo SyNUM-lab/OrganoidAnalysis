@@ -28,8 +28,8 @@ rm -f ${FILE}.r.ba*
 #	ASE variant calling:
 ./tools/gatk/gatk CollectAllelicCounts \
           -I ${FILE}.rg.bam \
-          -R ref/GRCh38.fa \
-          -L ref/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz \
+          -R ref38/GRCh38.fa \
+          -L ref38/Axiom_Exome_Plus.genotypes.all_populations.poly.hg38.vcf.gz \
           -O $PWD/ASE_results/${FILE}.outputTable.tsv
 
 done

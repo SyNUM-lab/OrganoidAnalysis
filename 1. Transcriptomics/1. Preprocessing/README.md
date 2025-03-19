@@ -6,3 +6,4 @@
 5. `Preprocessing.R` - perform preprocessing and differential expression analysis.
 6. `EvaluateApoptosis.R` - evaluate the expression of apoptotic markers over time.
 7. `GetBiotype.R` - get gene biotype using biomaRt.
+8. `GeneProteinCorrelations.R` - get correlations between gene and protein expression levels.

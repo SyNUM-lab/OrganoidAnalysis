@@ -15,11 +15,10 @@ homeDir <- "D:/RTTproject/CellAnalysis/OrganoidAnalysis"
 setwd(paste0(homeDir,"/2. Proteomics/1. Preprocessing"))
 
 # Load sample information
-load(paste0(homeDir,"/sampleInfo.RData"))
+sampleInfo <- read.delim("D:/RTTproject/CellAnalysis/Data/PRIDE/sampleInfo.txt")
 
 # Read proteomics data
-pxData_raw <- read.delim("D:/RTTproject/OriginalData/Proteomics/DEP analysis/Result files/20210310_Cell__total_scaling_raw.txt",
-                     as.is= TRUE)
+pxData_raw <- read.delim("D:/RTTproject/CellAnalysis/Data/PRIDE/RawPxData.txt")
 
 # Filter for contaminant proteins and low confidence hits
 pxData_raw <- pxData_raw[!pxData_raw$Contaminant,]
@@ -39,53 +38,7 @@ for (i in 1:ncol(pxData_raw)){
   pxData_raw[,i] <- as.numeric(pxData_raw[,i])
 }
 
-# Chance column names
-samples <- str_remove_all(colnames(pxData_raw), "\\.")
-samples1 <- rep(0, length(samples))
-for (i in 1:length(samples)){
-  
-  #IC or RTT
-  if (str_detect(samples[i],"IC")){
-    a <- "IC_"
-  } else{
-    a <- ""
-  }
-  
-  a <- paste0(a, "MeCP2_R255X_")
-  
-  #Day
-  if (str_detect(samples[i],"D0")){
-    a <- paste0(a, "D0")
-  } else if (str_detect(samples[i], "D13")){
-    a <- paste0(a, "D13")
-  } else if (str_detect(samples[i], "D40")){
-    a <- paste0(a, "D40")
-  } else if (str_detect(samples[i], "D75")){
-    a <- paste0(a, "D75")
-  }
-  
-  #Tissue
-  if (str_detect(samples[i],"Dorsal")){
-    a <- paste0(a, "_Dorsal")
-  } else if (str_detect(samples[i], "Ventral")){
-    a <- paste0(a, "_Ventral")
-  }
-  
-  #Replicate
-  if (str_detect(samples[i],"n1")){
-    a <- paste0(a, "_1")
-  } else if (str_detect(samples[i], "n2")){
-    a <- paste0(a, "_2")
-  } else if (str_detect(samples[i], "n3")){
-    a <- paste0(a, "_3")
-  }
-  samples1[i] <- a
-}
-
-all(samples1 %in% sampleInfo$SampleID)
-
-
-colnames(pxData_raw) <- samples1
+# Change column order
 pxData_raw <- pxData_raw[,sampleInfo$SampleID]
 all(sampleInfo$SampleID == colnames(pxData_raw))
 

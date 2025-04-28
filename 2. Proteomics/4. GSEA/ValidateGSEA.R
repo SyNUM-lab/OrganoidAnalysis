@@ -86,7 +86,9 @@ plotData$Name <- factor(plotData$Name, levels = terms_ordered)
 mainPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(.~Region, scales = "free", space = "free") +
-  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, trans = "pseudo_log") +
+  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", 
+                       midpoint = 0, trans = "pseudo_log", lim = c(-10,10),
+                       oob = scales::squish) +
   scale_color_manual(values = c("white", "black")) +
   labs(fill = "Signed\n-log10 p-value") +
   theme_void() +
@@ -150,7 +152,9 @@ ggsave(finalPlot, file = "GOEnrichment_ProteomicsValidation.png", width = 8, hei
 legendPlot <- ggplot(data = plotData, aes(x = key, y = Description, fill = value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(.~Region, scales = "free", space = "free") +
-  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, trans = "pseudo_log") +
+  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", 
+                       midpoint = 0, trans = "pseudo_log", lim = c(-10,10),
+                       oob = scales::squish) +
   scale_color_manual(values = c("white", "black")) +
   labs(fill = "") +
   guides(color = "none") +

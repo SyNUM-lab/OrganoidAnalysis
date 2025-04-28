@@ -629,7 +629,9 @@ colors <- c("#E7298A","#66A61E","#E6AB02","#A6761D","#666666")
 mainPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(cols = vars(Study), scale = "free", space = "free") +
-  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, trans = "pseudo_log") +
+  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, 
+                       trans = "pseudo_log", lim = c(-6,6),
+                       oob = scales::squish) +
   scale_color_manual(values = c("white", "black")) +
   labs(fill = "Signed\n-log10 p-value") +
   theme_void() +
@@ -687,7 +689,9 @@ ggsave(legend, file = "legend1_GOEnrichment_RTTvsIC.png", width = 8, height = 8)
 legendPlot <- ggplot(data = plotDF, aes(x = Source, y = Description, fill = Value,  color = Sig)) +
   geom_tile(linewidth = 0.5, width = 0.9, height=0.7) +
   facet_grid(cols = vars(Study), scale = "free", space = "free") +
-  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, trans = "pseudo_log") +
+  scale_fill_gradient2(low = "#000072", mid = "white", high = "red", midpoint = 0, 
+                       trans = "pseudo_log", lim = c(-6,6),
+                       oob = scales::squish) +
   scale_color_manual(values = c("white", "black")) +
   labs(fill = "Signed\n-log10 p-value") +
   theme_void() +

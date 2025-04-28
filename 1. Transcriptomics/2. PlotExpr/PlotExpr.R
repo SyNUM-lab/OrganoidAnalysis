@@ -50,8 +50,8 @@ p_DF$ID <- paste0(p_DF$TimeRegion, "_", p_DF$Gene)
 
 #==============================================================================#
 # select genes
-test <- geneAnnotation[which(str_detect(geneAnnotation$GeneName, "EIF2B1")),]
-selectedGene <- "ENSG00000111361_EIF2B1"
+test <- geneAnnotation[which(str_detect(geneAnnotation$GeneName, "GFAP")),]
+selectedGene <- "ENSG00000131095_GFAP"
 #==============================================================================#
 
 # Get HGNC symbol of selected gene
